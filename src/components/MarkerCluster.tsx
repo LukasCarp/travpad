@@ -9,22 +9,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { useMap } from "react-leaflet";
 import type { Pin } from "@/lib/supabase";
 import {
-  CATEGORIES,
   colorForCategory,
   iconForCategory,
+  iconForSubcategory,
 } from "@/lib/pinTaxonomy";
-
-// Leaflet's default icon assets break under bundlers; point them at the CDN.
-const defaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
 
 // Secret-spot pins get a distinct violet badge instead of the standard pin.
 const secretIcon = L.divIcon({
@@ -39,9 +27,12 @@ const secretIcon = L.divIcon({
   popupAnchor: [0, -34],
 });
 
-// One colored badge per main category, carrying that category's lucide icon.
-function buildCategoryIcon(category: string): L.DivIcon {
-  const Icon = iconForCategory(category);
+// A colored badge carrying the subcategory's lucide icon (or the category's
+// icon when a pin has no subcategory), tinted with the main category color.
+function buildPinIcon(category: string, subcategory: string | null): L.DivIcon {
+  const Icon = subcategory
+    ? iconForSubcategory(subcategory)
+    : iconForCategory(category);
   const svg = renderToStaticMarkup(
     <Icon color="#fff" size={18} strokeWidth={2.5} />
   );
@@ -58,9 +49,20 @@ function buildCategoryIcon(category: string): L.DivIcon {
   });
 }
 
-const categoryIcons = new Map<string, L.DivIcon>(
-  CATEGORIES.map((c) => [c, buildCategoryIcon(c)])
-);
+// Built icons are cached by category+subcategory so each combination is only
+// rendered to markup once.
+const iconCache = new Map<string, L.DivIcon>();
+
+function pinIcon(pin: Pin): L.DivIcon {
+  if (pin.secret) return secretIcon;
+  const key = `${pin.category}|${pin.subcategory ?? ""}`;
+  let icon = iconCache.get(key);
+  if (!icon) {
+    icon = buildPinIcon(pin.category, pin.subcategory);
+    iconCache.set(key, icon);
+  }
+  return icon;
+}
 
 type Props = {
   pins: Pin[];
@@ -78,11 +80,7 @@ export default function MarkerCluster({ pins, onPinClick }: Props) {
     });
 
     for (const pin of pins) {
-      const marker = L.marker([pin.lat, pin.lng], {
-        icon: pin.secret
-          ? secretIcon
-          : categoryIcons.get(pin.category) ?? defaultIcon,
-      });
+      const marker = L.marker([pin.lat, pin.lng], { icon: pinIcon(pin) });
       marker.on("click", () => onPinClick(pin.id));
       cluster.addLayer(marker);
     }

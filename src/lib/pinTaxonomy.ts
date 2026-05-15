@@ -1,13 +1,49 @@
 import {
+  ArrowLeftRight,
   Banknote,
   Bed,
+  BedDouble,
+  Bike,
+  Bus,
+  Cake,
   Camera,
   Car,
+  CarTaxiFront,
+  Castle,
+  Church,
+  Coffee,
+  CreditCard,
+  Gamepad2,
   Globe,
+  GraduationCap,
+  Grape,
+  Hammer,
+  Hotel,
+  House,
+  KeyRound,
+  Laptop,
+  Martini,
+  Mic,
+  Mountain,
   Music,
+  Palette,
+  ParkingMeter,
+  PartyPopper,
+  Plane,
+  Puzzle,
+  Sandwich,
+  Shirt,
   ShoppingBag,
+  ShoppingCart,
+  Smartphone,
+  Store,
   Tag,
+  Tent,
+  Trees,
   Utensils,
+  UtensilsCrossed,
+  Waves,
+  Wifi,
   type LucideIcon,
 } from "lucide-react";
 
@@ -513,4 +549,57 @@ export function colorForCategory(category: string): string {
 
 export function iconForCategory(category: string): LucideIcon {
   return CATEGORY_ICON[category] ?? Tag;
+}
+
+// A lucide icon per subcategory. Subcategories reuse their parent category's
+// color; only the icon is specific.
+const SUBCATEGORY_ICON: Record<string, LucideIcon> = {
+  // Eat/Drink
+  Restaurant: UtensilsCrossed,
+  "Café & Bakery": Coffee,
+  "Bars & Pubs": Martini,
+  "Street Food & Markets": Sandwich,
+  "Wineries & Breweries": Grape,
+  "Dessert & Sweets": Cake,
+  // Sleep
+  "Hotel & Resort": Hotel,
+  "Hostel & Guesthouse": BedDouble,
+  "Vacation Rental & Villa": House,
+  "Camping & Glamping": Tent,
+  "Mountain Huts & Refuges": Mountain,
+  // See/Do
+  "Nature & Viewpoints": Trees,
+  "Beaches & Coastal": Waves,
+  "History & Monuments": Castle,
+  "Temples & Religious Sites": Church,
+  "Arts & Museums": Palette,
+  "Adventure & Sports": Bike,
+  "Workshops & Classes": GraduationCap,
+  // Entertainment
+  "Clubs & Nightlife": PartyPopper,
+  "Live Music & Performing Arts": Mic,
+  "Social Gaming & Festivals": Gamepad2,
+  // Shopping
+  "Vintage & Second Hand": Shirt,
+  "Local Craft & Design": Hammer,
+  "Groceries & Delicatessen": ShoppingCart,
+  "Fashion & Malls": Store,
+  "Specialty & Hobbies": Puzzle,
+  // Money
+  "ATM / Cash Machine": CreditCard,
+  "Exchange & Transfer": ArrowLeftRight,
+  // Internet & Work
+  "Coworking Spaces": Laptop,
+  "Wifi Cafés & Libraries": Wifi,
+  "Telecom & Connectivity": Smartphone,
+  // Transport
+  "Public Transport": Bus,
+  Rentals: KeyRound,
+  "Taxi & Ride-Sharing": CarTaxiFront,
+  "Long-Distance Hubs": Plane,
+  "Parking & Charging": ParkingMeter,
+};
+
+export function iconForSubcategory(subcategory: string): LucideIcon {
+  return SUBCATEGORY_ICON[subcategory] ?? Tag;
 }
