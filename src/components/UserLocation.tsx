@@ -106,7 +106,7 @@ export default function UserLocation() {
     <>
       <div
         ref={containerRef}
-        className="absolute bottom-24 right-6 z-[500] flex flex-col items-end gap-2"
+        className="absolute bottom-40 right-6 z-[500] flex flex-col items-end gap-2"
       >
         {error && (
           <div className="max-w-xs rounded-lg bg-white px-3 py-2 text-xs text-rose-700 shadow-lg ring-1 ring-rose-200 dark:bg-neutral-900 dark:text-rose-300 dark:ring-rose-900">
