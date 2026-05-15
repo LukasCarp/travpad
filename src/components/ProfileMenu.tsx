@@ -54,7 +54,7 @@ export default function ProfileMenu() {
   return (
     <Link
       href={`/?profile=${user.id}`}
-      aria-label="Öppna min profil"
+      aria-label="Open my profile"
       className="block h-10 w-10 overflow-hidden rounded-full bg-white shadow-lg ring-1 ring-black/10 transition hover:ring-rose-300 dark:ring-white/10 dark:hover:ring-rose-700"
     >
       {url ? (

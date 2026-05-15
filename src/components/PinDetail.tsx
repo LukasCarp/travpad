@@ -59,11 +59,11 @@ export default function PinDetail({ pin }: { pin: Pin }) {
           >
             {showLong ? (
               <>
-                Dölj <ChevronUp className="h-3 w-3" />
+                Hide <ChevronUp className="h-3 w-3" />
               </>
             ) : (
               <>
-                Läs mer <ChevronDown className="h-3 w-3" />
+                Read more <ChevronDown className="h-3 w-3" />
               </>
             )}
           </button>
@@ -78,7 +78,7 @@ export default function PinDetail({ pin }: { pin: Pin }) {
       {pin.services && pin.services.length > 0 && (
         <div className="flex flex-wrap gap-1.5 pt-1">
           {pin.services.map((s) => {
-            const Icon = iconForService(s);
+            const Icon = iconForService();
             return (
               <span
                 key={s}

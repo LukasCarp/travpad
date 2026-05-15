@@ -1,21 +1,32 @@
 "use client";
 
-import { SERVICES, iconForService, labelForService } from "@/lib/pinTaxonomy";
+import { chipsFor, iconForService, labelForService } from "@/lib/pinTaxonomy";
 
 type Props = {
   category: string;
+  subcategory: string;
   value: string[];
   onChange: (next: string[]) => void;
 };
 
-export default function ServiceTags({ category, value, onChange }: Props) {
-  const available =
-    (SERVICES as Record<string, readonly string[]>)[category] ?? [];
+export default function ServiceTags({
+  category,
+  subcategory,
+  value,
+  onChange,
+}: Props) {
+  if (!subcategory) {
+    return (
+      <p className="text-xs text-neutral-500">Select a subcategory first.</p>
+    );
+  }
+
+  const available = chipsFor(category, subcategory);
 
   if (available.length === 0) {
     return (
       <p className="text-xs text-neutral-500">
-        Inga services definierade för denna kategori.
+        No service buttons for this subcategory.
       </p>
     );
   }
@@ -30,7 +41,7 @@ export default function ServiceTags({ category, value, onChange }: Props) {
   return (
     <div className="flex flex-wrap gap-2">
       {available.map((service) => {
-        const Icon = iconForService(service);
+        const Icon = iconForService();
         const active = value.includes(service);
         return (
           <button

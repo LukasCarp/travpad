@@ -77,7 +77,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
     const [mapRes, pinRes] = await Promise.all([
       fetch(nominatimUrl, {
         signal: ctrl.signal,
-        headers: { "Accept-Language": "sv" },
+        headers: { "Accept-Language": "en" },
       })
         .then((r) => (r.ok ? r.json() : []))
         .catch(() => []),
@@ -166,7 +166,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder="Sök platser eller pins…"
+          placeholder="Search places or pins…"
           className="flex-1 bg-transparent outline-none"
         />
         {query.length > 0 && (
@@ -177,7 +177,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
               setMapHits([]);
               setPinHits([]);
             }}
-            aria-label="Rensa"
+            aria-label="Clear"
             className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
           >
             <X className="h-4 w-4" />
@@ -190,7 +190,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
           {pinHits.length > 0 && (
             <div className="py-1">
               <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-                Pin
+                Pins
               </div>
               {pinHits.map((hit) => (
                 <button
@@ -219,7 +219,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
           {mapHits.length > 0 && (
             <div className="border-t border-neutral-100 py-1 dark:border-neutral-800">
               <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-                Karta
+                Map
               </div>
               {mapHits.map((hit) => (
                 <button
@@ -240,12 +240,12 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
           )}
 
           {busy && (
-            <div className="px-3 py-3 text-sm text-neutral-500">Söker…</div>
+            <div className="px-3 py-3 text-sm text-neutral-500">Searching…</div>
           )}
 
           {noResults && (
             <div className="px-3 py-3 text-sm text-neutral-500">
-              Inga resultat.
+              No results.
             </div>
           )}
         </div>

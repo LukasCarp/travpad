@@ -20,7 +20,7 @@ const MapCanvas = dynamic(() => import("./MapCanvas"), {
   ssr: false,
   loading: () => (
     <div className="flex h-full w-full items-center justify-center text-sm text-neutral-500">
-      Laddar karta…
+      Loading map…
     </div>
   ),
 });
@@ -54,7 +54,7 @@ export default function TravPadHome() {
   } | null>(null);
   const [relocating, setRelocating] = useState(false);
 
-  // FAB: "Välj på kartan" mode — next map click sets the new pin's position.
+  // FAB: "Pick on the map" mode — next map click sets the new pin's position.
   const [pickingFromMap, setPickingFromMap] = useState(false);
 
   // Imperative map move (used by SearchBox map results).
@@ -228,8 +228,8 @@ export default function TravPadHome() {
   const clearMapFocus = useCallback(() => setMapFocus(null), []);
 
   const status = useMemo(() => {
-    if (loading) return "Laddar pins…";
-    if (loadError) return `Fel: ${loadError}`;
+    if (loading) return "Loading pins…";
+    if (loadError) return `Error: ${loadError}`;
     return `${pins.length} pin${pins.length === 1 ? "" : "s"}`;
   }, [loading, loadError, pins.length]);
 
@@ -281,7 +281,7 @@ export default function TravPadHome() {
               className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-4 py-1.5 text-sm font-medium text-white shadow-lg hover:bg-rose-600"
             >
               <LogIn className="h-4 w-4" />
-              Logga in
+              Sign in
             </Link>
           )}
         </div>
@@ -291,13 +291,13 @@ export default function TravPadHome() {
             {pickingFromMap ? (
               <>
                 <Plus className="h-4 w-4 text-rose-500" />
-                <span>Klicka var pinnen ska sitta</span>
+                <span>Click where the pin should go</span>
                 <button
                   type="button"
                   onClick={() => setPickingFromMap(false)}
                   className="ml-2 rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                 >
-                  Avbryt
+                  Cancel
                 </button>
               </>
             ) : (
@@ -305,10 +305,10 @@ export default function TravPadHome() {
                 <Plus className="h-4 w-4 text-rose-500" />
                 <span>
                   {authLoading
-                    ? "Laddar…"
+                    ? "Loading…"
                     : user
                       ? status
-                      : "Logga in för att lägga till pins"}
+                      : "Sign in to add pins"}
                 </span>
               </>
             )}

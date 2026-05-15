@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "TravPad",
-  description: "Wiki-karta för resenärer",
+  description: "Wiki map for travelers",
 };
 
 export default function RootLayout({

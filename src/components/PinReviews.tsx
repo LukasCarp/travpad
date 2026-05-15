@@ -31,7 +31,7 @@ function StarRow({
             type="button"
             disabled={!interactive}
             onClick={() => onChange?.(n)}
-            aria-label={`${n} stjärnor`}
+            aria-label={`${n} stars`}
             className={
               "disabled:cursor-default " +
               (interactive ? "cursor-pointer" : "")
@@ -54,7 +54,7 @@ function StarRow({
 
 function formatDate(iso: string) {
   const d = new Date(iso);
-  return d.toLocaleDateString("sv-SE", {
+  return d.toLocaleDateString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -113,7 +113,7 @@ export default function PinReviews({ pinId }: Props) {
     e.preventDefault();
     setError(null);
     if (draftRating < 1) {
-      setError("Välj ett betyg (1-5 stjärnor) först.");
+      setError("Pick a rating (1-5 stars) first.");
       return;
     }
     setSubmitting(true);
@@ -127,7 +127,7 @@ export default function PinReviews({ pinId }: Props) {
       await loadReviews();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Kunde inte spara recension"
+        err instanceof Error ? err.message : "Couldn't save review"
       );
     } finally {
       setSubmitting(false);
@@ -154,7 +154,7 @@ export default function PinReviews({ pinId }: Props) {
     <div className="space-y-4 border-t border-neutral-200 pt-4 dark:border-neutral-800">
       <div className="flex items-center justify-between">
         <h2 className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-          Recensioner
+          Reviews
         </h2>
         {avg !== null && (
           <div className="flex items-center gap-1.5 text-sm">
@@ -166,7 +166,7 @@ export default function PinReviews({ pinId }: Props) {
           </div>
         )}
         {avg === null && !loading && (
-          <span className="text-xs text-neutral-500">Inga recensioner än</span>
+          <span className="text-xs text-neutral-500">No reviews yet</span>
         )}
       </div>
 
@@ -177,7 +177,7 @@ export default function PinReviews({ pinId }: Props) {
         >
           <div className="flex items-center justify-between">
             <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300">
-              {myReview ? "Din recension" : "Skriv en recension"}
+              {myReview ? "Your review" : "Write a review"}
             </span>
             <StarRow value={draftRating} onChange={setDraftRating} />
           </div>
@@ -185,7 +185,7 @@ export default function PinReviews({ pinId }: Props) {
             value={draftText}
             onChange={(e) => setDraftText(e.target.value)}
             rows={3}
-            placeholder="Berätta vad du tycker (valfritt)"
+            placeholder="Tell us what you think (optional)"
             className="w-full resize-none rounded-lg border border-neutral-300 bg-white px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700 dark:bg-neutral-900"
           />
           {error && (
@@ -200,10 +200,10 @@ export default function PinReviews({ pinId }: Props) {
               className="rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-medium text-white shadow hover:bg-rose-600 disabled:opacity-50"
             >
               {submitting
-                ? "Sparar…"
+                ? "Saving…"
                 : myReview
-                  ? "Uppdatera"
-                  : "Skicka recension"}
+                  ? "Update"
+                  : "Submit review"}
             </button>
             {myReview && (
               <button
@@ -212,23 +212,23 @@ export default function PinReviews({ pinId }: Props) {
                 className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-neutral-500 hover:bg-neutral-100 hover:text-rose-600 dark:hover:bg-neutral-800"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Ta bort
+                Remove
               </button>
             )}
           </div>
         </form>
       ) : (
         <p className="rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-500 dark:bg-neutral-800/40">
-          Logga in för att skriva en recension.
+          Sign in to write a review.
         </p>
       )}
 
       <div className="space-y-3">
         {loading && (
-          <p className="text-xs text-neutral-500">Laddar recensioner…</p>
+          <p className="text-xs text-neutral-500">Loading reviews…</p>
         )}
         {!loading && reviews.length === 0 && (
-          <p className="text-xs text-neutral-500">Bli först att recensera.</p>
+          <p className="text-xs text-neutral-500">Be the first to review.</p>
         )}
         {reviews.map((r) => (
           <div
@@ -247,7 +247,7 @@ export default function PinReviews({ pinId }: Props) {
                 className="text-[11px] font-medium text-neutral-500 hover:text-rose-600 hover:underline"
               >
                 {r.author_label}
-                {user?.id === r.user_id && " (du)"}
+                {user?.id === r.user_id && " (you)"}
               </Link>
             </div>
             {r.text && (

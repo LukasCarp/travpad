@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MapPin, Move, X } from "lucide-react";
 import type { NewPin, Pin } from "@/lib/supabase";
-import { CATEGORIES, SUBCATEGORIES, type Category } from "@/lib/pinTaxonomy";
+import { CATEGORIES, subcategoriesFor, emojiFor, type Category } from "@/lib/pinTaxonomy";
 import ServiceTags from "./ServiceTags";
 import PinImageUpload from "./PinImageUpload";
 
@@ -65,7 +65,7 @@ export default function AddPinForm({
   // when initialValues hydrate the form.
   const [userTouchedCategory, setUserTouchedCategory] = useState(false);
 
-  const subOptions = SUBCATEGORIES[category];
+  const subOptions = subcategoriesFor(category);
 
   useEffect(() => {
     if (userTouchedCategory) {
@@ -79,11 +79,13 @@ export default function AddPinForm({
     setError(null);
 
     if (!title.trim()) {
-      setError("Titel krävs");
+      setError("Title is required");
       return;
     }
     if (shortDesc.length > SHORT_DESC_MAX) {
-      setError(`Kort beskrivning får vara max ${SHORT_DESC_MAX} tecken`);
+      setError(
+        `Short description can be at most ${SHORT_DESC_MAX} characters`
+      );
       return;
     }
 
@@ -102,7 +104,7 @@ export default function AddPinForm({
         imageStoragePaths: imagePaths,
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte spara pin");
+      setError(err instanceof Error ? err.message : "Couldn't save pin");
       setSaving(false);
     }
   }
@@ -121,13 +123,13 @@ export default function AddPinForm({
       <div className="fixed inset-x-0 bottom-0 z-[1000] flex justify-center p-4">
         <div className="flex items-center gap-3 rounded-full bg-white px-5 py-3 shadow-2xl ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/10">
           <MapPin className="h-4 w-4 text-rose-500" />
-          <span className="text-sm">Klicka på kartan för ny position</span>
+          <span className="text-sm">Click the map for the new position</span>
           <button
             type="button"
             onClick={onCancelRelocate}
             className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
           >
-            Avbryt
+            Cancel
           </button>
         </div>
       </div>
@@ -142,7 +144,7 @@ export default function AddPinForm({
             <div className="flex items-center gap-2">
               <MapPin className="h-5 w-5 text-rose-500" />
               <h2 className="text-lg font-semibold">
-                {mode === "edit" ? "Redigera pin" : "Ny pin"}
+                {mode === "edit" ? "Edit pin" : "New pin"}
               </h2>
             </div>
             <div className="mt-1 flex items-center gap-2">
@@ -156,7 +158,7 @@ export default function AddPinForm({
                   className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200"
                 >
                   <Move className="h-3 w-3" />
-                  Flytta
+                  Move
                 </button>
               )}
             </div>
@@ -165,7 +167,7 @@ export default function AddPinForm({
             type="button"
             onClick={onCancel}
             className="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            aria-label="Stäng"
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
@@ -177,13 +179,13 @@ export default function AddPinForm({
         >
           <div className="flex-1 space-y-4 overflow-y-auto p-6">
             <div>
-              <label className="mb-1 block text-sm font-medium">Titel</label>
+              <label className="mb-1 block text-sm font-medium">Title</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
-                placeholder="t.ex. Café Tortoni"
+                placeholder="e.g. Café Tortoni"
                 autoFocus
               />
             </div>
@@ -191,7 +193,7 @@ export default function AddPinForm({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-sm font-medium">
-                  Kategori
+                  Category
                 </label>
                 <select
                   value={category}
@@ -203,44 +205,37 @@ export default function AddPinForm({
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>
-                      {c}
+                      {emojiFor(c)} {c}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium">
-                  Underkategori
+                  Subcategory
                 </label>
-                {subOptions.length > 0 ? (
-                  <select
-                    value={subcategory}
-                    onChange={(e) => setSubcategory(e.target.value)}
-                    className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
-                  >
-                    <option value="">— välj —</option>
-                    {subOptions.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <input
-                    type="text"
-                    value={subcategory}
-                    onChange={(e) => setSubcategory(e.target.value)}
-                    placeholder="Fritt"
-                    className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
-                  />
-                )}
+                <select
+                  value={subcategory}
+                  onChange={(e) => {
+                    setSubcategory(e.target.value);
+                    setServices([]);
+                  }}
+                  className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
+                >
+                  <option value="">— select —</option>
+                  {subOptions.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 
             <div>
               <div className="mb-1 flex items-baseline justify-between">
                 <label className="block text-sm font-medium">
-                  Kort beskrivning
+                  Short description
                 </label>
                 <span className="text-[10px] text-neutral-400">
                   {shortDesc.length}/{SHORT_DESC_MAX}
@@ -254,34 +249,37 @@ export default function AddPinForm({
                 }
                 maxLength={SHORT_DESC_MAX}
                 className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
-                placeholder="En mening som visas först i detaljvyn"
+                placeholder="A sentence shown first in the detail view"
               />
             </div>
 
             <div>
               <label className="mb-1 block text-sm font-medium">
-                Lång beskrivning
+                Long description
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={5}
                 className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
-                placeholder="Mer detaljer — hamnar bakom Läs mer-knappen."
+                placeholder="More details — shown behind the Read more button."
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Services</label>
+              <label className="mb-1 block text-sm font-medium">
+                Service buttons
+              </label>
               <ServiceTags
                 category={category}
+                subcategory={subcategory}
                 value={services}
                 onChange={setServices}
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Bilder</label>
+              <label className="mb-1 block text-sm font-medium">Images</label>
               <PinImageUpload
                 paths={imagePaths}
                 onChange={setImagePaths}
@@ -294,7 +292,7 @@ export default function AddPinForm({
             {gpsSuggest && (
               <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm dark:border-rose-900 dark:bg-rose-950/40">
                 <p className="text-neutral-700 dark:text-neutral-200">
-                  Bilden innehåller GPS-data:
+                  The image contains GPS data:
                   <br />
                   <span className="font-mono text-xs">
                     {gpsSuggest.lat.toFixed(5)}, {gpsSuggest.lng.toFixed(5)}
@@ -307,14 +305,14 @@ export default function AddPinForm({
                     disabled={!onSuggestRelocate}
                     className="rounded-lg bg-rose-500 px-3 py-1.5 text-xs font-medium text-white shadow hover:bg-rose-600 disabled:opacity-50"
                   >
-                    Flytta pin hit
+                    Move pin here
                   </button>
                   <button
                     type="button"
                     onClick={() => setGpsSuggest(null)}
                     className="rounded-lg px-3 py-1.5 text-xs text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                   >
-                    Behåll nuvarande
+                    Keep current
                   </button>
                 </div>
               </div>
@@ -333,7 +331,7 @@ export default function AddPinForm({
               onClick={onCancel}
               className="rounded-lg px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
             >
-              Avbryt
+              Cancel
             </button>
             <button
               type="submit"
@@ -341,10 +339,10 @@ export default function AddPinForm({
               className="rounded-lg bg-rose-500 px-4 py-2 text-sm font-medium text-white shadow hover:bg-rose-600 disabled:opacity-50"
             >
               {saving
-                ? "Sparar…"
+                ? "Saving…"
                 : mode === "edit"
-                  ? "Spara ändringar"
-                  : "Spara pin"}
+                  ? "Save changes"
+                  : "Save pin"}
             </button>
           </div>
         </form>

@@ -33,7 +33,7 @@ export default function Navbar({ onMapPick, onPinPick }: Props) {
             className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-4 py-1.5 text-sm font-medium text-white shadow hover:bg-rose-600"
           >
             <LogIn className="h-4 w-4" />
-            Logga in
+            Sign in
           </Link>
         )}
       </div>

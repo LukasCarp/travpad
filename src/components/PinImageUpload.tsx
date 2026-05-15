@@ -34,7 +34,7 @@ export default function PinImageUpload({
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) {
-        throw new Error("Du måste vara inloggad för att ladda upp bilder.");
+        throw new Error("You must be signed in to upload images.");
       }
 
       const [imageCompression, exifr] = await Promise.all([
@@ -89,7 +89,7 @@ export default function PinImageUpload({
 
       onChange([...paths, ...newPaths]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Uppladdning misslyckades");
+      setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setBusy(false);
     }
@@ -111,12 +111,12 @@ export default function PinImageUpload({
         {busy ? (
           <>
             <Loader className="h-4 w-4 animate-spin" />
-            Laddar upp…
+            Uploading…
           </>
         ) : (
           <>
             <ImagePlus className="h-4 w-4" />
-            Lägg till bilder
+            Add images
           </>
         )}
         <input
@@ -150,7 +150,7 @@ export default function PinImageUpload({
                 type="button"
                 onClick={() => removePath(path)}
                 className="absolute right-0.5 top-0.5 rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
-                aria-label="Ta bort bild"
+                aria-label="Remove image"
               >
                 <Trash2 className="h-3 w-3" />
               </button>

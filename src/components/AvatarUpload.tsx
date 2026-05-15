@@ -25,7 +25,7 @@ export default function AvatarUpload({ currentPath, onChange }: Props) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) throw new Error("Du måste vara inloggad.");
+      if (!user) throw new Error("You must be signed in.");
 
       const imageCompression = (
         await import("browser-image-compression")
@@ -58,7 +58,7 @@ export default function AvatarUpload({ currentPath, onChange }: Props) {
 
       onChange(path);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Uppladdning misslyckades");
+      setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setBusy(false);
     }
@@ -95,12 +95,12 @@ export default function AvatarUpload({ currentPath, onChange }: Props) {
           {busy ? (
             <>
               <Loader className="h-3.5 w-3.5 animate-spin" />
-              Laddar upp…
+              Uploading…
             </>
           ) : (
             <>
               <ImagePlus className="h-3.5 w-3.5" />
-              {currentPath ? "Byt bild" : "Lägg till bild"}
+              {currentPath ? "Change image" : "Add image"}
             </>
           )}
           <input
@@ -123,7 +123,7 @@ export default function AvatarUpload({ currentPath, onChange }: Props) {
             className="inline-flex items-center gap-1 text-xs text-neutral-500 hover:text-rose-600"
           >
             <X className="h-3 w-3" />
-            Ta bort
+            Remove
           </button>
         )}
 

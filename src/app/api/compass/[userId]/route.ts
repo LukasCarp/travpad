@@ -13,8 +13,8 @@ type PinRow = {
 function buildPrompt(pins: PinRow[]): string {
   if (pins.length === 0) {
     return [
-      "En användare på TravPad har inte pinnat några platser än.",
-      "Skriv en kort, charmig kommentar (max 2 meningar, på svenska) som uppmuntrar dem att börja utforska.",
+      "A user on TravPad hasn't pinned any places yet.",
+      "Write a short, charming comment (max 2 sentences, in English) encouraging them to start exploring.",
     ].join("\n");
   }
 
@@ -22,19 +22,19 @@ function buildPrompt(pins: PinRow[]): string {
     const cat = [p.category, p.subcategory].filter(Boolean).join(" / ");
     const services = (p.services ?? []).join(", ");
     const desc = p.short_description ? ` — ${p.short_description}` : "";
-    return `- ${p.title} (${cat || "okategoriserad"})${
-      services ? `; taggar: ${services}` : ""
+    return `- ${p.title} (${cat || "uncategorized"})${
+      services ? `; tags: ${services}` : ""
     }${desc}`;
   });
 
   return [
-    "Här är platser som en användare har pinnat på TravPad:",
+    "Here are places a user has pinned on TravPad:",
     "",
     lines.join("\n"),
     "",
-    "Skriv en kort, charmig sammanfattning (max 2-3 meningar) av användarens resekaraktär på svenska.",
-    "Använd gärna ett kreativt epitet (t.ex. \"Naturvandrare\", \"Stadsestet\", \"Hantverksletare\", \"Kustnomad\") om något passar — men hitta på ett som matchar mönstret du ser.",
-    "Skriv personligt och varmt, men sakligt grundat i platserna ovan. Inga punktlistor.",
+    "Write a short, charming summary (max 2-3 sentences) of the user's travel character in English.",
+    "Feel free to use a creative epithet (e.g. \"Nature Wanderer\", \"City Aesthete\", \"Craft Hunter\", \"Coastal Nomad\") if one fits — but invent one that matches the pattern you see.",
+    "Write it personally and warmly, but grounded in the places above. No bullet lists.",
   ].join("\n");
 }
 
@@ -54,7 +54,7 @@ export async function POST(
   }
   if (user.id !== userId) {
     return NextResponse.json(
-      { error: "Du kan bara generera din egen Compass." },
+      { error: "You can only generate your own Compass." },
       { status: 403 }
     );
   }
@@ -62,7 +62,7 @@ export async function POST(
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY saknas på servern." },
+      { error: "ANTHROPIC_API_KEY is missing on the server." },
       { status: 500 }
     );
   }
@@ -90,7 +90,7 @@ export async function POST(
 
     if (!text) {
       return NextResponse.json(
-        { error: "AI-svaret var tomt." },
+        { error: "The AI response was empty." },
         { status: 502 }
       );
     }
@@ -111,7 +111,7 @@ export async function POST(
     return NextResponse.json({ text, generated_at: generatedAt });
   } catch (err) {
     const message =
-      err instanceof Error ? err.message : "AI-anropet misslyckades.";
+      err instanceof Error ? err.message : "The AI request failed.";
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }

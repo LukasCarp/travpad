@@ -13,7 +13,7 @@ type Props = {
 
 function formatRelative(iso: string): string {
   const date = new Date(iso);
-  return date.toLocaleString("sv-SE", {
+  return date.toLocaleString("en-US", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -45,7 +45,7 @@ export default function CompassSection({
       setError(
         err instanceof Error
           ? err.message
-          : "Kunde inte uppdatera TravPad Compass"
+          : "Couldn't update TravPad Compass"
       );
     } finally {
       setBusy(false);
@@ -70,10 +70,10 @@ export default function CompassSection({
           >
             <RefreshCw className={"h-3 w-3 " + (busy ? "animate-spin" : "")} />
             {busy
-              ? "Genererar…"
+              ? "Generating…"
               : compassText
-                ? "Uppdatera"
-                : "Generera"}
+                ? "Update"
+                : "Generate"}
           </button>
         )}
       </div>
@@ -85,15 +85,15 @@ export default function CompassSection({
           </p>
           {generatedAt && (
             <p className="mt-2 text-[10px] text-neutral-500">
-              Uppdaterad {formatRelative(generatedAt)}
+              Updated {formatRelative(generatedAt)}
             </p>
           )}
         </>
       ) : (
         <p className="text-sm text-neutral-500">
           {canRefresh
-            ? "Klicka på Generera så bygger AI:n en sammanfattning av din resekaraktär baserat på dina pins."
-            : "Den här användaren har inte genererat sin TravPad Compass än."}
+            ? "Click Generate and the AI will build a summary of your travel character based on your pins."
+            : "This user hasn't generated their TravPad Compass yet."}
         </p>
       )}
 

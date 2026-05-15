@@ -100,7 +100,7 @@ function LoginForm() {
         setSubmitting(false);
         return;
       }
-      setNotice("Konto skapat. Kolla din inkorg för bekräftelse.");
+      setNotice("Account created. Check your inbox to confirm.");
       setSubmitting(false);
     }
   }
@@ -114,10 +114,10 @@ function LoginForm() {
         </Link>
 
         <h1 className="mb-1 text-center text-2xl font-semibold">
-          {mode === "signin" ? "Logga in" : "Skapa konto"}
+          {mode === "signin" ? "Sign in" : "Create account"}
         </h1>
         <p className="mb-6 text-center text-sm text-neutral-500">
-          Pinna platser och bygg din reseguide.
+          Pin places and build your travel guide.
         </p>
 
         <div className="space-y-2">
@@ -128,7 +128,7 @@ function LoginForm() {
             className="flex w-full items-center justify-center gap-3 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium shadow-sm transition hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
           >
             <GoogleIcon className="h-5 w-5" />
-            Logga in med Google
+            Sign in with Google
           </button>
           <button
             type="button"
@@ -137,20 +137,20 @@ function LoginForm() {
             className="flex w-full items-center justify-center gap-3 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm font-medium shadow-sm transition hover:bg-neutral-50 disabled:opacity-50 dark:border-neutral-700 dark:bg-neutral-800 dark:hover:bg-neutral-700"
           >
             <FacebookIcon className="h-5 w-5" />
-            Logga in med Facebook
+            Sign in with Facebook
           </button>
         </div>
 
         <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-wide text-neutral-400">
           <div className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
-          eller
+          or
           <div className="h-px flex-1 bg-neutral-200 dark:bg-neutral-800" />
         </div>
 
         <form onSubmit={handleEmail} className="space-y-3">
           <div>
             <label htmlFor="email" className="mb-1 block text-sm font-medium">
-              E-post
+              Email
             </label>
             <div className="relative">
               <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
@@ -169,7 +169,7 @@ function LoginForm() {
 
           <div>
             <label htmlFor="password" className="mb-1 block text-sm font-medium">
-              Lösenord
+              Password
             </label>
             <div className="relative">
               <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
@@ -204,15 +204,15 @@ function LoginForm() {
             className="w-full rounded-lg bg-rose-500 px-4 py-2.5 text-sm font-medium text-white shadow transition hover:bg-rose-600 disabled:opacity-50"
           >
             {submitting
-              ? "Vänta…"
+              ? "Please wait…"
               : mode === "signin"
-                ? "Logga in"
-                : "Skapa konto"}
+                ? "Sign in"
+                : "Create account"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-neutral-500">
-          {mode === "signin" ? "Inget konto?" : "Har du redan ett konto?"}{" "}
+          {mode === "signin" ? "No account?" : "Already have an account?"}{" "}
           <button
             type="button"
             onClick={() => {
@@ -222,7 +222,7 @@ function LoginForm() {
             }}
             className="font-medium text-rose-500 hover:underline"
           >
-            {mode === "signin" ? "Skapa ett" : "Logga in"}
+            {mode === "signin" ? "Create one" : "Sign in"}
           </button>
         </p>
       </div>

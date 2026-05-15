@@ -198,7 +198,7 @@ export default function ProfilePageContent({
     ]);
 
     if (profileErr || !profileData) {
-      setError("Profilen kunde inte laddas.");
+      setError("The profile couldn't be loaded.");
       setLoading(false);
       return;
     }
@@ -295,7 +295,7 @@ export default function ProfilePageContent({
           }
         >
           <Drawer.Title className="sr-only">
-            {profile?.display_name ?? "Profil"}
+            {profile?.display_name ?? "Profile"}
           </Drawer.Title>
 
           {isMobile && (
@@ -312,14 +312,14 @@ export default function ProfilePageContent({
               "absolute z-10 rounded-full bg-white/90 p-1.5 text-neutral-700 shadow ring-1 ring-black/5 hover:bg-white dark:bg-neutral-800/90 dark:text-neutral-100 dark:ring-white/10 " +
               (isMobile ? "right-3 top-4" : "right-3 top-3")
             }
-            aria-label="Stäng"
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
 
           {loading && (
             <div className="flex-1 p-8 text-sm text-neutral-500">
-              Laddar profil…
+              Loading profile…
             </div>
           )}
 
@@ -352,13 +352,13 @@ export default function ProfilePageContent({
                         <span className="font-medium text-neutral-700 dark:text-neutral-300">
                           {followers.length}
                         </span>{" "}
-                        följare
+                        followers
                       </span>
                       <span>
                         <span className="font-medium text-neutral-700 dark:text-neutral-300">
                           {following.length}
                         </span>{" "}
-                        följer
+                        following
                       </span>
                     </div>
                   </div>
@@ -370,7 +370,7 @@ export default function ProfilePageContent({
                         className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
                       >
                         <Pencil className="h-4 w-4" />
-                        Redigera
+                        Edit
                       </button>
                     ) : user ? (
                       <button
@@ -387,12 +387,12 @@ export default function ProfilePageContent({
                         {isFollowing ? (
                           <>
                             <UserCheck className="h-4 w-4" />
-                            Följer
+                            Following
                           </>
                         ) : (
                           <>
                             <UserPlus className="h-4 w-4" />
-                            Följ
+                            Follow
                           </>
                         )}
                       </button>
@@ -406,8 +406,8 @@ export default function ProfilePageContent({
                       {(
                         [
                           ["pins", `Pins (${pins.length})`],
-                          ["reviews", `Recensioner (${reviews.length})`],
-                          ["follows", `Följare (${followers.length})`],
+                          ["reviews", `Reviews (${reviews.length})`],
+                          ["follows", `Followers (${followers.length})`],
                         ] as const
                       ).map(([key, label]) => (
                         <button
@@ -443,7 +443,7 @@ export default function ProfilePageContent({
                 {isOwn && (
                   <section className="border-t border-neutral-200 pt-4 dark:border-neutral-800">
                     <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-                      Konto
+                      Account
                     </h2>
                     {user?.email && (
                       <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
@@ -456,7 +456,7 @@ export default function ProfilePageContent({
                       className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
                     >
                       <LogOut className="h-4 w-4" />
-                      Logga ut
+                      Sign out
                     </button>
                   </section>
                 )}
@@ -481,7 +481,7 @@ function PinsTab({ pins }: { pins: Pin[] }) {
   if (pins.length === 0) {
     return (
       <p className="text-sm text-neutral-500">
-        Den här användaren har inte skapat några pins än.
+        This user hasn't created any pins yet.
       </p>
     );
   }
@@ -501,7 +501,7 @@ function PinsTab({ pins }: { pins: Pin[] }) {
               </span>
             </div>
             <span className="text-xs text-neutral-400">
-              {new Date(pin.created_at).toLocaleDateString("sv-SE")}
+              {new Date(pin.created_at).toLocaleDateString("en-US")}
             </span>
           </Link>
         </li>
@@ -513,7 +513,7 @@ function PinsTab({ pins }: { pins: Pin[] }) {
 function ReviewsTab({ reviews }: { reviews: ReviewWithPin[] }) {
   if (reviews.length === 0) {
     return (
-      <p className="text-sm text-neutral-500">Inga recensioner skrivna än.</p>
+      <p className="text-sm text-neutral-500">No reviews written yet.</p>
     );
   }
   return (
@@ -528,12 +528,12 @@ function ReviewsTab({ reviews }: { reviews: ReviewWithPin[] }) {
               href={`/?pin=${r.pin_id}`}
               className="text-sm font-medium hover:underline"
             >
-              {r.pin_title ?? "Okänd plats"}
+              {r.pin_title ?? "Unknown place"}
             </Link>
             <div className="flex items-center gap-2">
               <StarRow value={r.rating} />
               <span className="text-[11px] text-neutral-500">
-                {new Date(r.created_at).toLocaleDateString("sv-SE")}
+                {new Date(r.created_at).toLocaleDateString("en-US")}
               </span>
             </div>
           </div>
@@ -561,15 +561,15 @@ function FollowsTab({
     <div className="grid gap-6 sm:grid-cols-2">
       <FollowsColumn
         supabase={supabase}
-        title="Följare"
+        title="Followers"
         list={followers}
-        emptyText="Inga följare än."
+        emptyText="No followers yet."
       />
       <FollowsColumn
         supabase={supabase}
-        title="Följer"
+        title="Following"
         list={following}
-        emptyText="Följer inte någon än."
+        emptyText="Not following anyone yet."
       />
     </div>
   );

@@ -38,10 +38,10 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
         onGpsFromImage(gps.latitude, gps.longitude);
         setOpen(false);
       } else {
-        setError("Bilden saknar GPS-data.");
+        setError("The image has no GPS data.");
       }
     } catch {
-      setError("Kunde inte läsa bildens metadata.");
+      setError("Couldn't read the image metadata.");
     } finally {
       setBusy(false);
     }
@@ -66,9 +66,9 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
           >
             <MapPin className="h-4 w-4 flex-none text-rose-500" />
             <div>
-              <div className="font-medium">Välj på kartan</div>
+              <div className="font-medium">Pick on the map</div>
               <div className="text-xs text-neutral-500">
-                Klicka var pinnen ska sitta
+                Click where the pin should go
               </div>
             </div>
           </button>
@@ -82,10 +82,10 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
             <ImagePlus className="h-4 w-4 flex-none text-rose-500" />
             <div>
               <div className="font-medium">
-                {busy ? "Läser bild…" : "Ladda upp bild med GPS"}
+                {busy ? "Reading image…" : "Upload image with GPS"}
               </div>
               <div className="text-xs text-neutral-500">
-                Position hämtas från EXIF-data
+                Position is read from EXIF data
               </div>
             </div>
           </button>
@@ -104,7 +104,7 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
           setOpen((v) => !v);
           setError(null);
         }}
-        aria-label={open ? "Stäng meny" : "Lägg till pin"}
+        aria-label={open ? "Close menu" : "Add pin"}
         className="fixed bottom-6 right-6 z-[500] flex h-14 w-14 items-center justify-center rounded-full bg-rose-500 text-white shadow-2xl ring-1 ring-black/10 transition hover:bg-rose-600"
       >
         {open ? <X className="h-6 w-6" /> : <Plus className="h-6 w-6" />}

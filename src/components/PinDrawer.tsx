@@ -72,7 +72,7 @@ export default function PinDrawer({
       await onDelete();
     } catch (err) {
       setActionError(
-        err instanceof Error ? err.message : "Kunde inte radera pinnen"
+        err instanceof Error ? err.message : "Couldn't delete the pin"
       );
     } finally {
       setDeleting(false);
@@ -117,7 +117,7 @@ export default function PinDrawer({
               "absolute z-10 rounded-full bg-white/90 p-1.5 text-neutral-700 shadow ring-1 ring-black/5 hover:bg-white dark:bg-neutral-800/90 dark:text-neutral-100 dark:ring-white/10 " +
               (isMobile ? "right-3 top-4" : "right-3 top-3")
             }
-            aria-label="Stäng"
+            aria-label="Close"
           >
             <X className="h-4 w-4" />
           </button>
@@ -145,7 +145,7 @@ export default function PinDrawer({
                           )
                         }
                         className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/85 p-2 text-neutral-700 shadow hover:bg-white"
-                        aria-label="Föregående bild"
+                        aria-label="Previous image"
                       >
                         <ChevronLeft className="h-4 w-4" />
                       </button>
@@ -155,7 +155,7 @@ export default function PinDrawer({
                           setActiveIdx((i) => (i + 1) % imageUrls.length)
                         }
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/85 p-2 text-neutral-700 shadow hover:bg-white"
-                        aria-label="Nästa bild"
+                        aria-label="Next image"
                       >
                         <ChevronRight className="h-4 w-4" />
                       </button>
@@ -180,7 +180,7 @@ export default function PinDrawer({
                           ? "ring-2 ring-rose-500"
                           : "ring-2 ring-transparent hover:ring-neutral-300")
                       }
-                      aria-label={`Bild ${i + 1}`}
+                      aria-label={`Image ${i + 1}`}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -210,7 +210,7 @@ export default function PinDrawer({
                   </div>
                   {pin.created_by && pin.created_by_name && (
                     <p className="text-xs text-neutral-500">
-                      Skapad av{" "}
+                      Created by{" "}
                       <Link
                         href={`/?profile=${pin.created_by}`}
                         className="font-medium text-rose-600 hover:underline"
@@ -236,11 +236,11 @@ export default function PinDrawer({
                 {pin.services && pin.services.length > 0 && (
                   <div className="border-t border-neutral-200 pt-4 dark:border-neutral-800">
                     <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-                      Services
+                      Service buttons
                     </h2>
                     <div className="flex flex-wrap gap-2">
                       {pin.services.map((s) => {
-                        const Icon = iconForService(s);
+                        const Icon = iconForService();
                         return (
                           <span
                             key={s}
@@ -262,8 +262,8 @@ export default function PinDrawer({
                     {confirmingDelete ? (
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-rose-700 dark:text-rose-300">
-                          Radera &ldquo;{pin.title}&rdquo;? Bilderna tas också
-                          bort.
+                          Delete &ldquo;{pin.title}&rdquo;? The images will be
+                          removed too.
                         </p>
                         <div className="flex gap-2">
                           <button
@@ -273,7 +273,7 @@ export default function PinDrawer({
                             className="inline-flex items-center gap-1.5 rounded-lg bg-rose-500 px-3 py-2 text-sm font-medium text-white shadow hover:bg-rose-600 disabled:opacity-50"
                           >
                             <Trash2 className="h-4 w-4" />
-                            {deleting ? "Raderar…" : "Bekräfta radering"}
+                            {deleting ? "Deleting…" : "Confirm delete"}
                           </button>
                           <button
                             type="button"
@@ -281,7 +281,7 @@ export default function PinDrawer({
                             disabled={deleting}
                             className="rounded-lg px-3 py-2 text-sm text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
                           >
-                            Ångra
+                            Cancel
                           </button>
                         </div>
                         {actionError && (
@@ -298,7 +298,7 @@ export default function PinDrawer({
                           className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
                         >
                           <Pencil className="h-4 w-4" />
-                          Redigera
+                          Edit
                         </button>
                         <button
                           type="button"
@@ -306,7 +306,7 @@ export default function PinDrawer({
                           className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950/30"
                         >
                           <Trash2 className="h-4 w-4" />
-                          Radera
+                          Delete
                         </button>
                       </div>
                     )}

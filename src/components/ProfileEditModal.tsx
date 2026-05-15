@@ -38,7 +38,7 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
 
     const name = displayName.trim();
     if (!name) {
-      setError("Namn krävs");
+      setError("Name is required");
       return;
     }
 
@@ -62,7 +62,7 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
       onSaved(data as Profile);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Kunde inte spara profil");
+      setError(err instanceof Error ? err.message : "Couldn't save profile");
       setSaving(false);
     }
   }
@@ -71,12 +71,12 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4">
       <div className="flex max-h-[90vh] w-full max-w-md flex-col rounded-xl bg-white shadow-2xl dark:bg-neutral-900">
         <div className="flex items-center justify-between border-b border-neutral-200 p-6 pb-4 dark:border-neutral-800">
-          <h2 className="text-lg font-semibold">Redigera profil</h2>
+          <h2 className="text-lg font-semibold">Edit profile</h2>
           <button
             type="button"
             onClick={onClose}
             className="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            aria-label="Stäng"
+            aria-label="Close"
           >
             <X className="h-5 w-5" />
           </button>
@@ -89,7 +89,7 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
           <div className="flex-1 space-y-4 overflow-y-auto p-6">
             <div>
               <label className="mb-2 block text-sm font-medium">
-                Profilbild
+                Profile picture
               </label>
               <AvatarUpload
                 currentPath={avatarPath}
@@ -98,13 +98,13 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">Namn</label>
+              <label className="mb-1 block text-sm font-medium">Name</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
-                placeholder="Ditt namn"
+                placeholder="Your name"
                 autoFocus
               />
             </div>
@@ -122,7 +122,7 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
                 rows={4}
                 maxLength={BIO_MAX}
                 className="w-full resize-none rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
-                placeholder="Berätta lite om dig själv"
+                placeholder="Tell us a bit about yourself"
               />
             </div>
 
@@ -139,14 +139,14 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
               onClick={onClose}
               className="rounded-lg px-4 py-2 text-sm font-medium text-neutral-600 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
             >
-              Avbryt
+              Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
               className="rounded-lg bg-rose-500 px-4 py-2 text-sm font-medium text-white shadow hover:bg-rose-600 disabled:opacity-50"
             >
-              {saving ? "Sparar…" : "Spara"}
+              {saving ? "Saving…" : "Save"}
             </button>
           </div>
         </form>

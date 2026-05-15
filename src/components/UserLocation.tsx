@@ -55,7 +55,7 @@ export default function UserLocation() {
 
   function startTracking() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      showError("Din webbläsare stöder inte platstjänster.");
+      showError("Your browser doesn't support location services.");
       return;
     }
     setBusy(true);
@@ -76,13 +76,13 @@ export default function UserLocation() {
         }
       },
       (err) => {
-        let msg = "Kunde inte hämta din plats.";
+        let msg = "Couldn't get your location.";
         if (err.code === err.PERMISSION_DENIED) {
-          msg = "Du har nekat platsåtkomst i webbläsaren.";
+          msg = "You've denied location access in the browser.";
         } else if (err.code === err.POSITION_UNAVAILABLE) {
-          msg = "Din position kunde inte fastställas.";
+          msg = "Your position couldn't be determined.";
         } else if (err.code === err.TIMEOUT) {
-          msg = "Det tog för lång tid att hämta din plats.";
+          msg = "It took too long to get your location.";
         }
         showError(msg);
         stopTracking();
@@ -116,8 +116,10 @@ export default function UserLocation() {
         <button
           type="button"
           onClick={handleToggle}
-          aria-label={tracking ? "Sluta följa min plats" : "Hitta min plats"}
-          title={tracking ? "Sluta följa min plats" : "Hitta min plats"}
+          aria-label={
+            tracking ? "Stop following my location" : "Find my location"
+          }
+          title={tracking ? "Stop following my location" : "Find my location"}
           aria-pressed={tracking}
           className={
             "flex h-11 w-11 items-center justify-center rounded-full shadow-2xl ring-1 ring-black/10 transition " +
