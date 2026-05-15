@@ -106,13 +106,8 @@ export default function UserLocation() {
     <>
       <div
         ref={containerRef}
-        className="absolute bottom-40 right-6 z-[500] flex flex-col items-end gap-2"
+        className="absolute right-4 top-44 z-[500] flex flex-col items-end gap-2 md:top-28"
       >
-        {error && (
-          <div className="max-w-xs rounded-lg bg-white px-3 py-2 text-xs text-rose-700 shadow-lg ring-1 ring-rose-200 dark:bg-neutral-900 dark:text-rose-300 dark:ring-rose-900">
-            {error}
-          </div>
-        )}
         <button
           type="button"
           onClick={handleToggle}
@@ -134,6 +129,11 @@ export default function UserLocation() {
             <LocateFixed className="h-5 w-5" />
           )}
         </button>
+        {error && (
+          <div className="max-w-xs rounded-lg bg-white px-3 py-2 text-xs text-rose-700 shadow-lg ring-1 ring-rose-200 dark:bg-neutral-900 dark:text-rose-300 dark:ring-rose-900">
+            {error}
+          </div>
+        )}
       </div>
 
       {position && (

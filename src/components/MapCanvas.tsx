@@ -6,7 +6,6 @@ import {
   TileLayer,
   useMap,
   useMapEvents,
-  ZoomControl,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Pin } from "@/lib/supabase";
@@ -54,14 +53,12 @@ export default function MapCanvas({
   onPinClick,
   focus,
   onFocusConsumed,
-  hideControls = false,
 }: {
   pins: Pin[];
   onMapClick: (lat: number, lng: number) => void;
   onPinClick: (pinId: string) => void;
   focus: MapFocus;
   onFocusConsumed: () => void;
-  hideControls?: boolean;
 }) {
   return (
     <MapContainer
@@ -80,7 +77,6 @@ export default function MapCanvas({
       <MarkerCluster pins={pins} onPinClick={onPinClick} />
       <UserLocation />
       <FocusController focus={focus} onConsumed={onFocusConsumed} />
-      {!hideControls && <ZoomControl position="topleft" />}
     </MapContainer>
   );
 }

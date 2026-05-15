@@ -268,7 +268,6 @@ export default function TravPadHome() {
           onPinClick={setSelectedId}
           focus={mapFocus}
           onFocusConsumed={clearMapFocus}
-          hideControls={!!selectedId || !!profileViewId}
         />
 
         <div className="absolute left-4 top-4 z-[500] flex items-center gap-3">
