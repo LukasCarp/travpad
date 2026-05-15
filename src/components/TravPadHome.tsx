@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { NewPin, Pin } from "@/lib/supabase";
 import AddPinFab from "./AddPinFab";
 import AddPinForm from "./AddPinForm";
+import CategoryFilter, { SECRET_FILTER } from "./CategoryFilter";
 import PinDrawer from "./PinDrawer";
 import ProfileMenu from "./ProfileMenu";
 import ProfilePageContent from "./ProfilePageContent";
@@ -57,8 +58,8 @@ export default function TravPadHome() {
   // FAB: "Pick on the map" mode — next map click sets the new pin's position.
   const [pickingFromMap, setPickingFromMap] = useState(false);
 
-  // When on, the map shows only pins flagged as secret spots.
-  const [secretOnly, setSecretOnly] = useState(false);
+  // Map filter: a category name, SECRET_FILTER, or null for "show all".
+  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
 
   // Imperative map move (used by SearchBox map results).
   const [mapFocus, setMapFocus] = useState<MapFocus>(null);
@@ -73,10 +74,11 @@ export default function TravPadHome() {
     [pins, editingId]
   );
 
-  const visiblePins = useMemo(
-    () => (secretOnly ? pins.filter((p) => p.secret) : pins),
-    [pins, secretOnly]
-  );
+  const visiblePins = useMemo(() => {
+    if (!categoryFilter) return pins;
+    if (categoryFilter === SECRET_FILTER) return pins.filter((p) => p.secret);
+    return pins.filter((p) => p.category === categoryFilter);
+  }, [pins, categoryFilter]);
 
   const editFormPosition = useMemo(() => {
     if (!editingPin) return null;
@@ -281,20 +283,10 @@ export default function TravPadHome() {
         </div>
 
         {!selectedId && !profileViewId && (
-          <button
-            type="button"
-            onClick={() => setSecretOnly((v) => !v)}
-            aria-pressed={secretOnly}
-            className={
-              "absolute left-4 top-20 z-[500] inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium shadow-lg ring-1 ring-black/10 transition " +
-              (secretOnly
-                ? "bg-violet-600 text-white hover:bg-violet-700"
-                : "bg-white/95 text-neutral-700 hover:bg-white dark:bg-neutral-900/95 dark:text-neutral-200")
-            }
-          >
-            <span aria-hidden="true">🤫</span>
-            {secretOnly ? "Secret spots only" : "Secret spots"}
-          </button>
+          <CategoryFilter
+            active={categoryFilter}
+            onChange={setCategoryFilter}
+          />
         )}
 
         <div className="absolute right-4 top-20 z-[500] md:top-4">
