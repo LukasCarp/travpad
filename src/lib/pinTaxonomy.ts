@@ -1,7 +1,15 @@
-import { Tag } from "lucide-react";
-import type { ComponentType } from "react";
-
-type IconCmp = ComponentType<{ className?: string; size?: number | string }>;
+import {
+  Banknote,
+  Bed,
+  Camera,
+  Car,
+  Globe,
+  Music,
+  ShoppingBag,
+  Tag,
+  Utensils,
+  type LucideIcon,
+} from "lucide-react";
 
 export const TAXONOMY = [
   {
@@ -467,10 +475,42 @@ export function chipsFor(
 
 // Chips are stored as their display label, so there is no key→label mapping and
 // no per-chip icon set — every chip renders with a single generic icon.
-export function iconForService(): IconCmp {
+export function iconForService(): LucideIcon {
   return Tag;
 }
 
 export function labelForService(service: string): string {
   return service;
+}
+
+// A representative color and lucide icon for each main category, used for the
+// map markers, the category filter, and the category badge.
+const CATEGORY_COLOR: Record<string, string> = {
+  "Eat/Drink": "#f97316",
+  Sleep: "#6366f1",
+  "See/Do": "#22c55e",
+  Entertainment: "#d946ef",
+  Shopping: "#14b8a6",
+  Money: "#eab308",
+  "Internet & Work": "#3b82f6",
+  Transport: "#ef4444",
+};
+
+const CATEGORY_ICON: Record<string, LucideIcon> = {
+  "Eat/Drink": Utensils,
+  Sleep: Bed,
+  "See/Do": Camera,
+  Entertainment: Music,
+  Shopping: ShoppingBag,
+  Money: Banknote,
+  "Internet & Work": Globe,
+  Transport: Car,
+};
+
+export function colorForCategory(category: string): string {
+  return CATEGORY_COLOR[category] ?? "#3b82f6";
+}
+
+export function iconForCategory(category: string): LucideIcon {
+  return CATEGORY_ICON[category] ?? Tag;
 }

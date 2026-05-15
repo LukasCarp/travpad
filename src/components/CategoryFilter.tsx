@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Check, Layers } from "lucide-react";
-import { CATEGORIES, emojiFor } from "@/lib/pinTaxonomy";
+import { CATEGORIES, colorForCategory, iconForCategory } from "@/lib/pinTaxonomy";
 
 export const SECRET_FILTER = "Secret Spot";
 
@@ -10,6 +10,24 @@ type Props = {
   active: string[];
   onChange: (next: string[]) => void;
 };
+
+function ItemIcon({ value }: { value: string }) {
+  if (value === SECRET_FILTER) {
+    return (
+      <span aria-hidden="true" className="flex-none text-base leading-none">
+        🤫
+      </span>
+    );
+  }
+  const Icon = iconForCategory(value);
+  return (
+    <Icon
+      className="h-4 w-4 flex-none"
+      color={colorForCategory(value)}
+      aria-hidden="true"
+    />
+  );
+}
 
 export default function CategoryFilter({ active, onChange }: Props) {
   const [open, setOpen] = useState(false);
@@ -33,8 +51,8 @@ export default function CategoryFilter({ active, onChange }: Props) {
   }
 
   const items = [
-    ...CATEGORIES.map((c) => ({ value: c, label: c, emoji: emojiFor(c) })),
-    { value: SECRET_FILTER, label: SECRET_FILTER, emoji: "🤫" },
+    ...CATEGORIES.map((c) => ({ value: c, label: c })),
+    { value: SECRET_FILTER, label: SECRET_FILTER },
   ];
 
   const count = active.length;
@@ -60,9 +78,7 @@ export default function CategoryFilter({ active, onChange }: Props) {
         }
       >
         {count === 1 ? (
-          <span aria-hidden="true">
-            {active[0] === SECRET_FILTER ? "🤫" : emojiFor(active[0])}
-          </span>
+          <ItemIcon value={active[0]} />
         ) : (
           <Layers className="h-4 w-4" />
         )}
@@ -89,7 +105,7 @@ export default function CategoryFilter({ active, onChange }: Props) {
                       : "")
                   }
                 >
-                  <span aria-hidden="true">{item.emoji}</span>
+                  <ItemIcon value={item.value} />
                   <span className="flex-1">{item.label}</span>
                   {isActive && <Check className="h-4 w-4 flex-none" />}
                 </button>

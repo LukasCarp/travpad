@@ -12,7 +12,11 @@ import {
 import { Drawer } from "vaul";
 import { createClient } from "@/lib/supabase/client";
 import type { Pin } from "@/lib/supabase";
-import { iconForService, labelForService } from "@/lib/pinTaxonomy";
+import {
+  colorForCategory,
+  iconForService,
+  labelForService,
+} from "@/lib/pinTaxonomy";
 import PinReviews from "./PinReviews";
 
 function useMediaQuery(query: string): boolean {
@@ -199,7 +203,12 @@ export default function PinDrawer({
                     {pin.title}
                   </h1>
                   <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                    <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-medium uppercase tracking-wide text-neutral-700 dark:bg-neutral-800 dark:text-neutral-200">
+                    <span
+                      className="rounded-full px-2.5 py-1 font-medium uppercase tracking-wide text-white"
+                      style={{
+                        backgroundColor: colorForCategory(pin.category),
+                      }}
+                    >
                       {pin.category}
                     </span>
                     {pin.subcategory && (

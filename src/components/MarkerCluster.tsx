@@ -5,8 +5,14 @@ import L from "leaflet";
 import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
+import { renderToStaticMarkup } from "react-dom/server";
 import { useMap } from "react-leaflet";
 import type { Pin } from "@/lib/supabase";
+import {
+  CATEGORIES,
+  colorForCategory,
+  iconForCategory,
+} from "@/lib/pinTaxonomy";
 
 // Leaflet's default icon assets break under bundlers; point them at the CDN.
 const defaultIcon = L.icon({
@@ -33,6 +39,29 @@ const secretIcon = L.divIcon({
   popupAnchor: [0, -34],
 });
 
+// One colored badge per main category, carrying that category's lucide icon.
+function buildCategoryIcon(category: string): L.DivIcon {
+  const Icon = iconForCategory(category);
+  const svg = renderToStaticMarkup(
+    <Icon color="#fff" size={18} strokeWidth={2.5} />
+  );
+  return L.divIcon({
+    className: "",
+    html:
+      '<div style="display:flex;align-items:center;justify-content:center;' +
+      "width:32px;height:32px;border-radius:9999px;border:2px solid #fff;" +
+      `background:${colorForCategory(category)};` +
+      `box-shadow:0 2px 6px rgba(0,0,0,0.4);">${svg}</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+}
+
+const categoryIcons = new Map<string, L.DivIcon>(
+  CATEGORIES.map((c) => [c, buildCategoryIcon(c)])
+);
+
 type Props = {
   pins: Pin[];
   onPinClick: (pinId: string) => void;
@@ -50,7 +79,9 @@ export default function MarkerCluster({ pins, onPinClick }: Props) {
 
     for (const pin of pins) {
       const marker = L.marker([pin.lat, pin.lng], {
-        icon: pin.secret ? secretIcon : defaultIcon,
+        icon: pin.secret
+          ? secretIcon
+          : categoryIcons.get(pin.category) ?? defaultIcon,
       });
       marker.on("click", () => onPinClick(pin.id));
       cluster.addLayer(marker);
