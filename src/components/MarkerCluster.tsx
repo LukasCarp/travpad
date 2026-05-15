@@ -20,6 +20,19 @@ const defaultIcon = L.icon({
   shadowSize: [41, 41],
 });
 
+// Secret-spot pins get a distinct violet badge instead of the standard pin.
+const secretIcon = L.divIcon({
+  className: "",
+  html:
+    '<div style="display:flex;align-items:center;justify-content:center;' +
+    "width:34px;height:34px;border-radius:9999px;background:#7c3aed;" +
+    "font-size:18px;border:2px solid #fff;" +
+    'box-shadow:0 2px 6px rgba(0,0,0,0.4);">🤫</div>',
+  iconSize: [34, 34],
+  iconAnchor: [17, 34],
+  popupAnchor: [0, -34],
+});
+
 type Props = {
   pins: Pin[];
   onPinClick: (pinId: string) => void;
@@ -36,7 +49,9 @@ export default function MarkerCluster({ pins, onPinClick }: Props) {
     });
 
     for (const pin of pins) {
-      const marker = L.marker([pin.lat, pin.lng], { icon: defaultIcon });
+      const marker = L.marker([pin.lat, pin.lng], {
+        icon: pin.secret ? secretIcon : defaultIcon,
+      });
       marker.on("click", () => onPinClick(pin.id));
       cluster.addLayer(marker);
     }

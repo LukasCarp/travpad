@@ -57,6 +57,9 @@ export default function TravPadHome() {
   // FAB: "Pick on the map" mode — next map click sets the new pin's position.
   const [pickingFromMap, setPickingFromMap] = useState(false);
 
+  // When on, the map shows only pins flagged as secret spots.
+  const [secretOnly, setSecretOnly] = useState(false);
+
   // Imperative map move (used by SearchBox map results).
   const [mapFocus, setMapFocus] = useState<MapFocus>(null);
 
@@ -68,6 +71,11 @@ export default function TravPadHome() {
   const editingPin = useMemo(
     () => (editingId ? pins.find((p) => p.id === editingId) ?? null : null),
     [pins, editingId]
+  );
+
+  const visiblePins = useMemo(
+    () => (secretOnly ? pins.filter((p) => p.secret) : pins),
+    [pins, secretOnly]
   );
 
   const editFormPosition = useMemo(() => {
@@ -92,7 +100,7 @@ export default function TravPadHome() {
     const { data, error } = await supabase
       .from("pins_view")
       .select(
-        "id, title, category, subcategory, short_description, description, services, details, lat, lng, created_by, created_by_name, created_at, images"
+        "id, title, category, subcategory, short_description, description, services, secret, details, lat, lng, created_by, created_by_name, created_at, images"
       );
     if (error) {
       setLoadError(error.message);
@@ -136,6 +144,7 @@ export default function TravPadHome() {
         p_services: pin.services,
         p_details: pin.details,
         p_image_paths: pin.imageStoragePaths,
+        p_secret: pin.secret,
       });
       if (error) throw new Error(error.message);
       setPending(null);
@@ -164,6 +173,7 @@ export default function TravPadHome() {
         p_description: pin.description,
         p_services: pin.services,
         p_image_paths: pin.imageStoragePaths,
+        p_secret: pin.secret,
       });
       if (error) throw new Error(error.message);
 
@@ -251,7 +261,7 @@ export default function TravPadHome() {
     <div className="relative h-screen w-full">
       <main className="relative h-full w-full">
         <MapCanvas
-          pins={pins}
+          pins={visiblePins}
           onMapClick={handleMapClick}
           onPinClick={setSelectedId}
           focus={mapFocus}
@@ -269,6 +279,23 @@ export default function TravPadHome() {
           </Link>
           <SearchBox onMapPick={handleMapPick} onPinPick={handlePinPick} />
         </div>
+
+        {!selectedId && !profileViewId && (
+          <button
+            type="button"
+            onClick={() => setSecretOnly((v) => !v)}
+            aria-pressed={secretOnly}
+            className={
+              "absolute left-4 top-20 z-[500] inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium shadow-lg ring-1 ring-black/10 transition " +
+              (secretOnly
+                ? "bg-violet-600 text-white hover:bg-violet-700"
+                : "bg-white/95 text-neutral-700 hover:bg-white dark:bg-neutral-900/95 dark:text-neutral-200")
+            }
+          >
+            <span aria-hidden="true">🤫</span>
+            {secretOnly ? "Secret spots only" : "Secret spots"}
+          </button>
+        )}
 
         <div className="absolute right-4 top-20 z-[500] md:top-4">
           {authLoading ? (

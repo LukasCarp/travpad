@@ -30,6 +30,7 @@ export type Pin = {
   short_description: string | null;
   description: string | null;
   services: string[];
+  secret: boolean;
   details: Record<string, unknown> | null;
   lat: number;
   lng: number;
@@ -46,6 +47,7 @@ export type NewPin = {
   short_description: string | null;
   description: string | null;
   services: string[];
+  secret: boolean;
   lat: number;
   lng: number;
   details: Record<string, unknown>;

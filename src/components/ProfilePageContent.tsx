@@ -178,7 +178,7 @@ export default function ProfilePageContent({
       supabase
         .from("pins_view")
         .select(
-          "id, title, category, subcategory, short_description, description, services, details, lat, lng, created_by, created_by_name, created_at, images"
+          "id, title, category, subcategory, short_description, description, services, secret, details, lat, lng, created_by, created_by_name, created_at, images"
         )
         .eq("created_by", profileId)
         .order("created_at", { ascending: false }),

@@ -207,6 +207,11 @@ export default function PinDrawer({
                         {pin.subcategory}
                       </span>
                     )}
+                    {pin.secret && (
+                      <span className="rounded-full bg-violet-100 px-2.5 py-1 font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
+                        🤫 Secret Spot
+                      </span>
+                    )}
                   </div>
                   {pin.created_by && pin.created_by_name && (
                     <p className="text-xs text-neutral-500">
