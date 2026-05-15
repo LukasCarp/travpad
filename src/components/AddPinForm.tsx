@@ -213,17 +213,6 @@ export default function AddPinForm({
               />
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium">Images</label>
-              <PinImageUpload
-                paths={imagePaths}
-                onChange={setImagePaths}
-                onGpsDetected={
-                  mode === "create" ? (gps) => setGpsSuggest(gps) : undefined
-                }
-              />
-            </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="mb-1 block text-sm font-medium">
@@ -330,6 +319,17 @@ export default function AddPinForm({
                   }
                 />
               </button>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-sm font-medium">Images</label>
+              <PinImageUpload
+                paths={imagePaths}
+                onChange={setImagePaths}
+                onGpsDetected={
+                  mode === "create" ? (gps) => setGpsSuggest(gps) : undefined
+                }
+              />
             </div>
 
             {gpsSuggest && (
