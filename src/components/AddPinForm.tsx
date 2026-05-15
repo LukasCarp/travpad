@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import { MapPin, Move, X } from "lucide-react";
 import type { NewPin, Pin } from "@/lib/supabase";
-import { CATEGORIES, subcategoriesFor, emojiFor, type Category } from "@/lib/pinTaxonomy";
+import {
+  CATEGORIES,
+  colorForCategory,
+  iconForCategory,
+  iconForSubcategory,
+  subcategoriesFor,
+  type Category,
+} from "@/lib/pinTaxonomy";
+import IconSelect from "./IconSelect";
 import ServiceTags from "./ServiceTags";
 import PinImageUpload from "./PinImageUpload";
 
@@ -67,6 +75,19 @@ export default function AddPinForm({
   const [userTouchedCategory, setUserTouchedCategory] = useState(false);
 
   const subOptions = subcategoriesFor(category);
+
+  const categoryOptions = CATEGORIES.map((c) => ({
+    value: c,
+    label: c,
+    icon: iconForCategory(c),
+    color: colorForCategory(c),
+  }));
+  const subcategoryOptions = subOptions.map((s) => ({
+    value: s,
+    label: s,
+    icon: iconForSubcategory(s),
+    color: colorForCategory(category),
+  }));
 
   useEffect(() => {
     if (userTouchedCategory) {
@@ -229,40 +250,28 @@ export default function AddPinForm({
                 <label className="mb-1 block text-sm font-medium">
                   Category
                 </label>
-                <select
+                <IconSelect
                   value={category}
-                  onChange={(e) => {
-                    setCategory(e.target.value as Category);
+                  options={categoryOptions}
+                  onChange={(v) => {
+                    setCategory(v as Category);
                     setUserTouchedCategory(true);
                   }}
-                  className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
-                >
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {emojiFor(c)} {c}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
               <div>
                 <label className="mb-1 block text-sm font-medium">
                   Subcategory
                 </label>
-                <select
+                <IconSelect
                   value={subcategory}
-                  onChange={(e) => {
-                    setSubcategory(e.target.value);
+                  options={subcategoryOptions}
+                  onChange={(v) => {
+                    setSubcategory(v);
                     setServices([]);
                   }}
-                  className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
-                >
-                  <option value="">— select —</option>
-                  {subOptions.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="— select —"
+                />
               </div>
             </div>
 
