@@ -381,6 +381,64 @@ export const TAXONOMY = [
       },
     ],
   },
+  {
+    name: "Transport",
+    emoji: "🚗",
+    subcategories: [
+      {
+        name: "Public Transport",
+        chips: [
+          "Metro/Subway",
+          "Bus Stop",
+          "Train Station",
+          "Tram",
+          "Ticket Machine",
+          "Free/Complimentary",
+        ],
+      },
+      {
+        name: "Rentals",
+        chips: [
+          "Car Rental",
+          "Scooter/Moto Rental",
+          "Bicycle Rental",
+          "ATV/Quad Rental",
+          "No Deposit Required",
+          "Helmets Included",
+        ],
+      },
+      {
+        name: "Taxi & Ride-Sharing",
+        chips: [
+          "Taxi Stand",
+          "Ride-Share Pickup (Uber/Grab)",
+          "Fixed Rates",
+          "24/7 Available",
+          "English Speaking",
+        ],
+      },
+      {
+        name: "Long-Distance Hubs",
+        chips: [
+          "Airport",
+          "Ferry Terminal",
+          "Long-Distance Bus Station",
+          "Central Train Station",
+          "Luggage Storage",
+        ],
+      },
+      {
+        name: "Parking & Charging",
+        chips: [
+          "Free Parking",
+          "Paid Parking",
+          "EV Charging Station",
+          "Secured/Guarded",
+          "Motorcycle Parking",
+        ],
+      },
+    ],
+  },
 ] as const;
 
 export type Category = (typeof TAXONOMY)[number]["name"];
