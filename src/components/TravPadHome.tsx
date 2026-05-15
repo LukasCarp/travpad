@@ -58,8 +58,8 @@ export default function TravPadHome() {
   // FAB: "Pick on the map" mode — next map click sets the new pin's position.
   const [pickingFromMap, setPickingFromMap] = useState(false);
 
-  // Map filter: a category name, SECRET_FILTER, or null for "show all".
-  const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  // Map filter: selected category names and/or SECRET_FILTER. Empty = show all.
+  const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
 
   // Imperative map move (used by SearchBox map results).
   const [mapFocus, setMapFocus] = useState<MapFocus>(null);
@@ -75,9 +75,12 @@ export default function TravPadHome() {
   );
 
   const visiblePins = useMemo(() => {
-    if (!categoryFilter) return pins;
-    if (categoryFilter === SECRET_FILTER) return pins.filter((p) => p.secret);
-    return pins.filter((p) => p.category === categoryFilter);
+    if (categoryFilter.length === 0) return [];
+    const selected = new Set(categoryFilter);
+    const wantSecret = selected.has(SECRET_FILTER);
+    return pins.filter(
+      (p) => selected.has(p.category) || (wantSecret && p.secret)
+    );
   }, [pins, categoryFilter]);
 
   const editFormPosition = useMemo(() => {
