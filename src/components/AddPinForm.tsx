@@ -213,36 +213,15 @@ export default function AddPinForm({
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-800/40">
-              <div>
-                <div className="flex items-center gap-1.5 text-sm font-medium">
-                  <span aria-hidden="true">🤫</span> Secret Spot
-                </div>
-                <p className="text-xs text-neutral-500">
-                  Mark this as a hidden gem — it gets a special marker on the
-                  map.
-                </p>
-              </div>
-              <button
-                type="button"
-                role="switch"
-                aria-checked={secret}
-                aria-label="Secret Spot"
-                onClick={() => setSecret((v) => !v)}
-                className={
-                  "relative h-6 w-11 flex-none rounded-full transition " +
-                  (secret
-                    ? "bg-violet-600"
-                    : "bg-neutral-300 dark:bg-neutral-700")
+            <div>
+              <label className="mb-1 block text-sm font-medium">Images</label>
+              <PinImageUpload
+                paths={imagePaths}
+                onChange={setImagePaths}
+                onGpsDetected={
+                  mode === "create" ? (gps) => setGpsSuggest(gps) : undefined
                 }
-              >
-                <span
-                  className={
-                    "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all " +
-                    (secret ? "left-[22px]" : "left-0.5")
-                  }
-                />
-              </button>
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -321,15 +300,36 @@ export default function AddPinForm({
               />
             </div>
 
-            <div>
-              <label className="mb-1 block text-sm font-medium">Images</label>
-              <PinImageUpload
-                paths={imagePaths}
-                onChange={setImagePaths}
-                onGpsDetected={
-                  mode === "create" ? (gps) => setGpsSuggest(gps) : undefined
+            <div className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-800/40">
+              <div>
+                <div className="flex items-center gap-1.5 text-sm font-medium">
+                  <span aria-hidden="true">🤫</span> Secret Spot
+                </div>
+                <p className="text-xs text-neutral-500">
+                  Mark this as a hidden gem — it gets a special marker on the
+                  map.
+                </p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={secret}
+                aria-label="Secret Spot"
+                onClick={() => setSecret((v) => !v)}
+                className={
+                  "relative h-6 w-11 flex-none rounded-full transition " +
+                  (secret
+                    ? "bg-violet-600"
+                    : "bg-neutral-300 dark:bg-neutral-700")
                 }
-              />
+              >
+                <span
+                  className={
+                    "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all " +
+                    (secret ? "left-[22px]" : "left-0.5")
+                  }
+                />
+              </button>
             </div>
 
             {gpsSuggest && (
