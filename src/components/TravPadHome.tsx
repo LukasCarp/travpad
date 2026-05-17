@@ -139,7 +139,7 @@ export default function TravPadHome() {
 
   const handleCreate = useCallback(
     async (pin: NewPin) => {
-      const { error } = await supabase.rpc("create_pin", {
+      const { data, error } = await supabase.rpc("create_pin", {
         p_title: pin.title,
         p_category: pin.category,
         p_lat: pin.lat,
@@ -155,6 +155,8 @@ export default function TravPadHome() {
       if (error) throw new Error(error.message);
       setPending(null);
       await loadPins();
+      // Pop the saved pin open so the user sees it.
+      if (typeof data === "string") setSelectedId(data);
     },
     [loadPins, supabase]
   );
@@ -194,6 +196,8 @@ export default function TravPadHome() {
       setEditPosition(null);
       setRelocating(false);
       await loadPins();
+      // Re-open the saved pin so the user sees the updated detail view.
+      setSelectedId(editingId);
     },
     [editingId, editingPin, loadPins, supabase]
   );
