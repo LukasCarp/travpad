@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ImagePlus, Loader, Trash2 } from "lucide-react";
+import { Camera, ImagePlus, Loader, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -107,31 +107,50 @@ export default function PinImageUpload({
 
   return (
     <div className="space-y-2">
-      <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-600 hover:border-rose-400 hover:text-rose-500 dark:border-neutral-700 dark:text-neutral-300">
-        {busy ? (
-          <>
-            <Loader className="h-4 w-4 animate-spin" />
-            Uploading…
-          </>
-        ) : (
-          <>
-            <ImagePlus className="h-4 w-4" />
-            Add images
-          </>
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          className="hidden"
-          disabled={busy}
-          onChange={(e) => {
-            const arr = e.target.files ? Array.from(e.target.files) : [];
-            e.target.value = "";
-            void handleFiles(arr);
-          }}
-        />
-      </label>
+      <div className="flex flex-wrap gap-2">
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-600 hover:border-rose-400 hover:text-rose-500 dark:border-neutral-700 dark:text-neutral-300">
+          {busy ? (
+            <>
+              <Loader className="h-4 w-4 animate-spin" />
+              Uploading…
+            </>
+          ) : (
+            <>
+              <ImagePlus className="h-4 w-4" />
+              Add images
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => {
+              const arr = e.target.files ? Array.from(e.target.files) : [];
+              e.target.value = "";
+              void handleFiles(arr);
+            }}
+          />
+        </label>
+
+        <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-neutral-300 px-3 py-2 text-sm text-neutral-600 hover:border-rose-400 hover:text-rose-500 dark:border-neutral-700 dark:text-neutral-300">
+          <Camera className="h-4 w-4" />
+          Take photo
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            disabled={busy}
+            onChange={(e) => {
+              const arr = e.target.files ? Array.from(e.target.files) : [];
+              e.target.value = "";
+              void handleFiles(arr);
+            }}
+          />
+        </label>
+      </div>
 
       {paths.length > 0 && (
         <div className="flex flex-wrap gap-2">
