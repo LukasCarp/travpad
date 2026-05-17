@@ -10,6 +10,7 @@ import type { NewPin, Pin } from "@/lib/supabase";
 import AddPinFab from "./AddPinFab";
 import AddPinForm from "./AddPinForm";
 import CategoryFilter, { SECRET_FILTER } from "./CategoryFilter";
+import ListDrawer from "./ListDrawer";
 import LoginModal from "./LoginModal";
 import Notifications from "./Notifications";
 import PinDrawer from "./PinDrawer";
@@ -278,6 +279,7 @@ export default function TravPadHome() {
     !!user && selectedPin?.created_by === user.id;
 
   const profileViewId = searchParams.get("profile");
+  const listViewId = searchParams.get("list");
 
   const closeProfile = useCallback(() => {
     const sp = new URLSearchParams(searchParams.toString());
@@ -293,6 +295,34 @@ export default function TravPadHome() {
       setSelectedId(pinId);
     },
     [closeProfile]
+  );
+
+  const closeList = useCallback(() => {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.delete("list");
+    const qs = sp.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
+  // Profile → list is a single URL change so the profile param can't linger.
+  const openListFromProfile = useCallback(
+    (listId: string) => {
+      const sp = new URLSearchParams(searchParams.toString());
+      sp.delete("profile");
+      sp.delete("tab");
+      sp.set("list", listId);
+      const qs = sp.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
+  const openPinFromList = useCallback(
+    (pinId: string) => {
+      closeList();
+      setSelectedId(pinId);
+    },
+    [closeList]
   );
 
   const showCreateForm = pending && !!user && !editingId;
@@ -415,6 +445,16 @@ export default function TravPadHome() {
           profileId={profileViewId}
           onClose={closeProfile}
           onOpenPin={openPinFromProfile}
+          onOpenList={openListFromProfile}
+        />
+      )}
+
+      {listViewId && (
+        <ListDrawer
+          key={listViewId}
+          listId={listViewId}
+          onClose={closeList}
+          onOpenPin={openPinFromList}
         />
       )}
 

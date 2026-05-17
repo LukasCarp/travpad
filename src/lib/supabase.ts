@@ -53,3 +53,10 @@ export type NewPin = {
   details: Record<string, unknown>;
   imageStoragePaths: string[];
 };
+
+export type List = {
+  id: string;
+  owner: string;
+  name: string;
+  created_at: string;
+};

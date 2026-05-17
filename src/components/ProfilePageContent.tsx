@@ -14,13 +14,13 @@ import {
 } from "lucide-react";
 import { Drawer } from "vaul";
 import { createClient } from "@/lib/supabase/client";
-import type { Pin, Profile, Review } from "@/lib/supabase";
+import type { List, Pin, Profile, Review } from "@/lib/supabase";
 import { useAuth } from "./AuthProvider";
 import ProfileEditModal from "./ProfileEditModal";
 
-type Tab = "pins" | "reviews" | "follows";
+type Tab = "pins" | "reviews" | "follows" | "lists";
 
-const VALID_TABS: Tab[] = ["pins", "reviews", "follows"];
+const VALID_TABS: Tab[] = ["pins", "reviews", "follows", "lists"];
 
 function parseTab(raw: string | null): Tab {
   return VALID_TABS.includes(raw as Tab) ? (raw as Tab) : "pins";
@@ -89,10 +89,12 @@ export default function ProfilePageContent({
   profileId,
   onClose,
   onOpenPin,
+  onOpenList,
 }: {
   profileId: string;
   onClose: () => void;
   onOpenPin: (pinId: string) => void;
+  onOpenList: (listId: string) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -105,6 +107,7 @@ export default function ProfilePageContent({
   const [reviews, setReviews] = useState<ReviewWithPin[]>([]);
   const [followers, setFollowers] = useState<FollowProfile[]>([]);
   const [following, setFollowing] = useState<FollowProfile[]>([]);
+  const [lists, setLists] = useState<List[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
 
   const [activeTab, setActiveTab] = useState<Tab>(() =>
@@ -169,6 +172,7 @@ export default function ProfilePageContent({
       { data: reviewsData },
       { data: followerRows },
       { data: followingRows },
+      { data: listsData },
     ] = await Promise.all([
       supabase
         .from("profiles")
@@ -197,6 +201,11 @@ export default function ProfilePageContent({
         .from("follows")
         .select("following_id")
         .eq("follower_id", profileId),
+      supabase
+        .from("lists")
+        .select("id, owner, name, created_at")
+        .eq("owner", profileId)
+        .order("created_at", { ascending: false }),
     ]);
 
     if (profileErr || !profileData) {
@@ -207,6 +216,7 @@ export default function ProfilePageContent({
 
     setProfile(profileData as Profile);
     setPins((pinsData ?? []) as Pin[]);
+    setLists((listsData ?? []) as List[]);
 
     const rawReviews = (reviewsData ?? []) as Review[];
     const pinIds = Array.from(new Set(rawReviews.map((r) => r.pin_id)));
@@ -410,6 +420,7 @@ export default function ProfilePageContent({
                       {(
                         [
                           ["pins", `Pins (${pins.length})`],
+                          ["lists", `Lists (${lists.length})`],
                           ["reviews", `Reviews (${reviews.length})`],
                           ["follows", `Followers (${followers.length})`],
                         ] as const
@@ -434,6 +445,9 @@ export default function ProfilePageContent({
                   <div className="pt-4">
                     {activeTab === "pins" && (
                       <PinsTab pins={pins} onOpenPin={onOpenPin} />
+                    )}
+                    {activeTab === "lists" && (
+                      <ListsTab lists={lists} onOpenList={onOpenList} />
                     )}
                     {activeTab === "reviews" && (
                       <ReviewsTab reviews={reviews} onOpenPin={onOpenPin} />
@@ -519,6 +533,36 @@ function PinsTab({
             </div>
             <span className="text-xs text-neutral-400">
               {new Date(pin.created_at).toLocaleDateString("en-US")}
+            </span>
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function ListsTab({
+  lists,
+  onOpenList,
+}: {
+  lists: List[];
+  onOpenList: (listId: string) => void;
+}) {
+  if (lists.length === 0) {
+    return <p className="text-sm text-neutral-500">No lists yet.</p>;
+  }
+  return (
+    <ul className="space-y-2">
+      {lists.map((l) => (
+        <li key={l.id}>
+          <button
+            type="button"
+            onClick={() => onOpenList(l.id)}
+            className="flex w-full items-baseline justify-between rounded-lg px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          >
+            <span className="font-medium">{l.name}</span>
+            <span className="text-xs text-neutral-400">
+              {new Date(l.created_at).toLocaleDateString("en-US")}
             </span>
           </button>
         </li>

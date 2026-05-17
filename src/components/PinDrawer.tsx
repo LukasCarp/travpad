@@ -22,6 +22,7 @@ import {
   labelForService,
 } from "@/lib/pinTaxonomy";
 import { useAuth } from "./AuthProvider";
+import AddToList from "./AddToList";
 import PinReviews from "./PinReviews";
 
 function useMediaQuery(query: string): boolean {
@@ -328,6 +329,7 @@ export default function PinDrawer({
                       {isFollowing ? "Following" : "Follow"}
                     </button>
                   )}
+                  <AddToList pinId={pin.id} />
                   <button
                     type="button"
                     onClick={onShowOnMap}
