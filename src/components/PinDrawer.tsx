@@ -9,6 +9,7 @@ import {
   ChevronRight,
   MapPin,
   Pencil,
+  Share2,
   Trash2,
   X,
 } from "lucide-react";
@@ -62,6 +63,7 @@ export default function PinDrawer({
   const [actionError, setActionError] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followBusy, setFollowBusy] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -117,6 +119,26 @@ export default function PinDrawer({
       setIsFollowing(true);
     }
     setFollowBusy(false);
+  }
+
+  async function handleShare() {
+    if (!pin) return;
+    const url = `${window.location.origin}/?pin=${pin.id}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: pin.title, url });
+      } catch {
+        // share dialog dismissed — ignore
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard unavailable — ignore
+    }
   }
 
   async function handleConfirmDelete() {
@@ -313,6 +335,14 @@ export default function PinDrawer({
                   >
                     <MapPin className="h-4 w-4" />
                     Show on map
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleShare}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                  >
+                    <Share2 className="h-4 w-4" />
+                    {copied ? "Copied!" : "Share"}
                   </button>
                 </div>
 
