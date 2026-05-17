@@ -40,9 +40,11 @@ export default function TravPadHome() {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   // Create flow
-  const [pending, setPending] = useState<{ lat: number; lng: number } | null>(
-    null
-  );
+  const [pending, setPending] = useState<{
+    lat: number;
+    lng: number;
+    imagePath?: string;
+  } | null>(null);
 
   // Drawer / share-link selection
   const [selectedId, setSelectedId] = useState<string | null>(
@@ -377,7 +379,9 @@ export default function TravPadHome() {
       {user && (
         <AddPinFab
           onPickFromMap={() => setPickingFromMap(true)}
-          onGpsFromImage={(lat, lng) => setPending({ lat, lng })}
+          onGpsFromImage={(lat, lng, imagePath) =>
+            setPending({ lat, lng, imagePath })
+          }
         />
       )}
 
@@ -419,6 +423,9 @@ export default function TravPadHome() {
           mode="create"
           position={pending}
           relocating={false}
+          initialImagePaths={
+            pending.imagePath ? [pending.imagePath] : undefined
+          }
           onSubmit={handleCreate}
           onCancel={() => setPending(null)}
           onSuggestRelocate={handleSuggestRelocate}

@@ -24,6 +24,7 @@ type Props = {
   position: { lat: number; lng: number };
   relocating: boolean;
   initialValues?: Pin | null;
+  initialImagePaths?: string[];
   onSubmit: (pin: NewPin) => Promise<void> | void;
   onCancel: () => void;
   onStartRelocate?: () => void;
@@ -36,6 +37,7 @@ export default function AddPinForm({
   position,
   relocating,
   initialValues,
+  initialImagePaths,
   onSubmit,
   onCancel,
   onStartRelocate,
@@ -60,7 +62,9 @@ export default function AddPinForm({
   );
   const [secret, setSecret] = useState(initialValues?.secret ?? false);
   const [imagePaths, setImagePaths] = useState<string[]>(
-    initialValues?.images?.map((i) => i.storage_path) ?? []
+    initialValues?.images?.map((i) => i.storage_path) ??
+      initialImagePaths ??
+      []
   );
   const [gpsSuggest, setGpsSuggest] = useState<{
     lat: number;

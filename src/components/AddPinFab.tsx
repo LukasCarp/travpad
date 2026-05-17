@@ -1,14 +1,16 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { ImagePlus, MapPin, Plus, X } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 type Props = {
   onPickFromMap: () => void;
-  onGpsFromImage: (lat: number, lng: number) => void;
+  onGpsFromImage: (lat: number, lng: number, imagePath: string) => void;
 };
 
 export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
+  const supabase = useMemo(() => createClient(), []);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,17 +33,47 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
       const exifr = (await import("exifr")).default;
       const gps = await exifr.gps(file);
       if (
-        gps &&
-        typeof gps.latitude === "number" &&
-        typeof gps.longitude === "number"
+        !gps ||
+        typeof gps.latitude !== "number" ||
+        typeof gps.longitude !== "number"
       ) {
-        onGpsFromImage(gps.latitude, gps.longitude);
-        setOpen(false);
-      } else {
         setError("The image has no GPS data.");
+        return;
       }
-    } catch {
-      setError("Couldn't read the image metadata.");
+
+      // Upload the image too, so it's attached to the new pin.
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("You must be signed in.");
+
+      const imageCompression = (await import("browser-image-compression"))
+        .default;
+      const compressed = await imageCompression(file, {
+        maxSizeMB: 1,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true,
+      });
+
+      const ext = (compressed.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${user.id}/${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 8)}.${ext}`;
+
+      const { error: upErr } = await supabase.storage
+        .from("pin-images")
+        .upload(path, compressed, {
+          contentType: compressed.type,
+          upsert: false,
+        });
+      if (upErr) throw new Error(upErr.message);
+
+      onGpsFromImage(gps.latitude, gps.longitude, path);
+      setOpen(false);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Couldn't add the image."
+      );
     } finally {
       setBusy(false);
     }
