@@ -355,6 +355,17 @@ export default function TravPadHome() {
         />
       )}
 
+      {!authLoading && !user && (
+        <Link
+          href="/login"
+          aria-label="Sign in to add pins"
+          title="Sign in to add pins"
+          className="fixed bottom-6 right-6 z-[500] flex h-14 w-14 items-center justify-center rounded-full bg-neutral-400 text-white shadow-2xl ring-1 ring-black/10 transition hover:bg-neutral-500 dark:bg-neutral-600 dark:hover:bg-neutral-500"
+        >
+          <Plus className="h-6 w-6" />
+        </Link>
+      )}
+
       <PinDrawer
         pin={selectedPin}
         onClose={() => setSelectedId(null)}
