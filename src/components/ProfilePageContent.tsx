@@ -280,7 +280,9 @@ export default function ProfilePageContent({
     <Drawer.Root
       open
       onOpenChange={(v) => {
-        if (!v) onClose();
+        // Keep the page open while the profile edit modal is up — clicks
+        // inside it would otherwise be treated as an outside dismissal.
+        if (!v && !editOpen) onClose();
       }}
       direction={direction}
     >
@@ -463,16 +465,18 @@ export default function ProfilePageContent({
               </div>
             </div>
           )}
+
+          {/* Rendered inside Drawer.Content so it sits within the drawer's
+              focus trap — otherwise its fields can't be focused. */}
+          {isOwn && editOpen && profile && (
+            <ProfileEditModal
+              profile={profile}
+              onClose={() => setEditOpen(false)}
+              onSaved={(p) => setProfile(p)}
+            />
+          )}
         </Drawer.Content>
       </Drawer.Portal>
-
-      {isOwn && editOpen && profile && (
-        <ProfileEditModal
-          profile={profile}
-          onClose={() => setEditOpen(false)}
-          onSaved={(p) => setProfile(p)}
-        />
-      )}
     </Drawer.Root>
   );
 }

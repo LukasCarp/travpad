@@ -68,7 +68,7 @@ export default function ProfileEditModal({ profile, onClose, onSaved }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4">
+    <div className="absolute inset-0 z-[1000] flex items-center justify-center bg-black/40 p-4">
       <div className="flex max-h-[90vh] w-full max-w-md flex-col rounded-xl bg-white shadow-2xl dark:bg-neutral-900">
         <div className="flex items-center justify-between border-b border-neutral-200 p-6 pb-4 dark:border-neutral-800">
           <h2 className="text-lg font-semibold">Edit profile</h2>
