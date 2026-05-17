@@ -376,16 +376,31 @@ export default function ProfilePageContent({
                       </span>
                     </div>
                   </div>
-                  <div className="flex-none">
+                  <div className="flex flex-none flex-col items-end gap-2">
                     {isOwn ? (
-                      <button
-                        type="button"
-                        onClick={() => setEditOpen(true)}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-                      >
-                        <Pencil className="h-4 w-4" />
-                        Edit
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setEditOpen(true)}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Edit
+                        </button>
+                        {user?.email && (
+                          <p className="max-w-[12rem] truncate text-xs text-neutral-500">
+                            {user.email}
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          onClick={handleSignOut}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sign out
+                        </button>
+                      </>
                     ) : user ? (
                       <button
                         type="button"
@@ -461,27 +476,6 @@ export default function ProfilePageContent({
                     )}
                   </div>
                 </section>
-
-                {isOwn && (
-                  <section className="border-t border-neutral-200 pt-4 dark:border-neutral-800">
-                    <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-                      Account
-                    </h2>
-                    {user?.email && (
-                      <p className="mb-3 text-sm text-neutral-600 dark:text-neutral-400">
-                        {user.email}
-                      </p>
-                    )}
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      Sign out
-                    </button>
-                  </section>
-                )}
               </div>
             </div>
           )}
