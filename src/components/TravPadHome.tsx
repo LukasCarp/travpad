@@ -10,6 +10,7 @@ import type { NewPin, Pin } from "@/lib/supabase";
 import AddPinFab from "./AddPinFab";
 import AddPinForm from "./AddPinForm";
 import CategoryFilter, { SECRET_FILTER } from "./CategoryFilter";
+import Notifications from "./Notifications";
 import PinDrawer from "./PinDrawer";
 import ProfileMenu from "./ProfileMenu";
 import ProfilePageContent from "./ProfilePageContent";
@@ -248,7 +249,10 @@ export default function TravPadHome() {
     return `${pins.length} pin${pins.length === 1 ? "" : "s"}`;
   }, [loading, loadError, pins.length]);
 
-  const ownsSelected = !!user && selectedPin?.created_by === user.id;
+  // Any signed-in user can edit a pin (wiki); only the creator can delete it.
+  const canEditSelected = !!user;
+  const canDeleteSelected =
+    !!user && selectedPin?.created_by === user.id;
 
   const profileViewId = searchParams.get("profile");
 
@@ -291,11 +295,14 @@ export default function TravPadHome() {
           />
         )}
 
-        <div className="absolute right-4 top-20 z-[500] md:top-4">
+        <div className="absolute right-4 top-20 z-[500] flex items-center gap-2 md:top-4">
           {authLoading ? (
             <div className="h-9 w-20 animate-pulse rounded-full bg-white/80 dark:bg-neutral-900/80" />
           ) : user ? (
-            <ProfileMenu />
+            <>
+              <Notifications onOpenPin={setSelectedId} />
+              <ProfileMenu />
+            </>
           ) : (
             <Link
               href="/login"
@@ -347,7 +354,8 @@ export default function TravPadHome() {
       <PinDrawer
         pin={selectedPin}
         onClose={() => setSelectedId(null)}
-        canEdit={ownsSelected}
+        canEdit={canEditSelected}
+        canDelete={canDeleteSelected}
         onEdit={startEdit}
         onDelete={handleDelete}
       />

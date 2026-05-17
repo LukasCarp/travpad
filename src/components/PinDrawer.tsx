@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  Bell,
+  BellRing,
   ChevronLeft,
   ChevronRight,
   Pencil,
@@ -17,6 +19,7 @@ import {
   iconForService,
   labelForService,
 } from "@/lib/pinTaxonomy";
+import { useAuth } from "./AuthProvider";
 import PinReviews from "./PinReviews";
 
 function useMediaQuery(query: string): boolean {
@@ -35,6 +38,7 @@ type Props = {
   pin: Pin | null;
   onClose: () => void;
   canEdit: boolean;
+  canDelete: boolean;
   onEdit: () => void;
   onDelete: () => Promise<void>;
 };
@@ -43,14 +47,18 @@ export default function PinDrawer({
   pin,
   onClose,
   canEdit,
+  canDelete,
   onEdit,
   onDelete,
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
+  const { user } = useAuth();
   const [activeIdx, setActiveIdx] = useState(0);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -68,6 +76,45 @@ export default function PinDrawer({
     setConfirmingDelete(false);
     setActionError(null);
   }, [pin?.id]);
+
+  useEffect(() => {
+    if (!pin || !user) {
+      setIsFollowing(false);
+      return;
+    }
+    let alive = true;
+    supabase
+      .from("pin_follows")
+      .select("pin_id")
+      .eq("user_id", user.id)
+      .eq("pin_id", pin.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (alive) setIsFollowing(!!data);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [pin, user, supabase]);
+
+  async function handleFollow() {
+    if (!pin || !user) return;
+    setFollowBusy(true);
+    if (isFollowing) {
+      await supabase
+        .from("pin_follows")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("pin_id", pin.id);
+      setIsFollowing(false);
+    } else {
+      await supabase
+        .from("pin_follows")
+        .insert({ user_id: user.id, pin_id: pin.id });
+      setIsFollowing(true);
+    }
+    setFollowBusy(false);
+  }
 
   async function handleConfirmDelete() {
     setDeleting(true);
@@ -235,6 +282,27 @@ export default function PinDrawer({
                   )}
                 </div>
 
+                {user && (
+                  <button
+                    type="button"
+                    onClick={handleFollow}
+                    disabled={followBusy}
+                    className={
+                      "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium shadow transition disabled:opacity-50 " +
+                      (isFollowing
+                        ? "bg-violet-600 text-white hover:bg-violet-700"
+                        : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700")
+                    }
+                  >
+                    {isFollowing ? (
+                      <BellRing className="h-4 w-4" />
+                    ) : (
+                      <Bell className="h-4 w-4" />
+                    )}
+                    {isFollowing ? "Following" : "Follow"}
+                  </button>
+                )}
+
                 {pin.short_description && (
                   <p className="border-l-2 border-rose-300 pl-3 text-base font-medium italic text-neutral-700 dark:border-rose-800 dark:text-neutral-200">
                     {pin.short_description}
@@ -271,7 +339,7 @@ export default function PinDrawer({
 
                 <PinReviews pinId={pin.id} />
 
-                {canEdit && (
+                {(canEdit || canDelete) && (
                   <div className="border-t border-neutral-200 pt-4 dark:border-neutral-800">
                     {confirmingDelete ? (
                       <div className="space-y-2">
@@ -306,22 +374,26 @@ export default function PinDrawer({
                       </div>
                     ) : (
                       <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={onEdit}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setConfirmingDelete(true)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950/30"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Delete
-                        </button>
+                        {canEdit && (
+                          <button
+                            type="button"
+                            onClick={onEdit}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                          >
+                            <Pencil className="h-4 w-4" />
+                            Edit
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            type="button"
+                            onClick={() => setConfirmingDelete(true)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-rose-300 px-3 py-2 text-sm font-medium text-rose-600 hover:bg-rose-50 dark:border-rose-900 dark:text-rose-400 dark:hover:bg-rose-950/30"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Delete
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
