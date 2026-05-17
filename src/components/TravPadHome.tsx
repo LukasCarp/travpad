@@ -10,6 +10,7 @@ import type { NewPin, Pin } from "@/lib/supabase";
 import AddPinFab from "./AddPinFab";
 import AddPinForm from "./AddPinForm";
 import CategoryFilter, { SECRET_FILTER } from "./CategoryFilter";
+import LoginModal from "./LoginModal";
 import Notifications from "./Notifications";
 import PinDrawer from "./PinDrawer";
 import ProfileMenu from "./ProfileMenu";
@@ -61,6 +62,9 @@ export default function TravPadHome() {
 
   // Map filter: selected category names and/or SECRET_FILTER. Empty = show all.
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+
+  // Login modal over the map.
+  const [loginOpen, setLoginOpen] = useState(false);
 
   // Imperative map move (used by SearchBox map results).
   const [mapFocus, setMapFocus] = useState<MapFocus>(null);
@@ -308,13 +312,14 @@ export default function TravPadHome() {
               <ProfileMenu />
             </>
           ) : (
-            <Link
-              href="/login"
+            <button
+              type="button"
+              onClick={() => setLoginOpen(true)}
               className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-4 py-1.5 text-sm font-medium text-white shadow-lg hover:bg-rose-600"
             >
               <LogIn className="h-4 w-4" />
               Sign in
-            </Link>
+            </button>
           )}
         </div>
 
@@ -356,15 +361,18 @@ export default function TravPadHome() {
       )}
 
       {!authLoading && !user && (
-        <Link
-          href="/login"
+        <button
+          type="button"
+          onClick={() => setLoginOpen(true)}
           aria-label="Sign in to add pins"
           title="Sign in to add pins"
           className="fixed bottom-6 right-6 z-[500] flex h-14 w-14 items-center justify-center rounded-full bg-neutral-400 text-white shadow-2xl ring-1 ring-black/10 transition hover:bg-neutral-500 dark:bg-neutral-600 dark:hover:bg-neutral-500"
         >
           <Plus className="h-6 w-6" />
-        </Link>
+        </button>
       )}
+
+      {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
 
       <PinDrawer
         pin={selectedPin}
