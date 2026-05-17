@@ -285,6 +285,14 @@ export default function TravPadHome() {
     router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
   }, [pathname, router, searchParams]);
 
+  const openPinFromProfile = useCallback(
+    (pinId: string) => {
+      closeProfile();
+      setSelectedId(pinId);
+    },
+    [closeProfile]
+  );
+
   const showCreateForm = pending && !!user && !editingId;
 
   return (
@@ -402,6 +410,7 @@ export default function TravPadHome() {
           key={profileViewId}
           profileId={profileViewId}
           onClose={closeProfile}
+          onOpenPin={openPinFromProfile}
         />
       )}
 

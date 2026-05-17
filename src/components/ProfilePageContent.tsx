@@ -88,9 +88,11 @@ function Avatar({ url, size = 96 }: { url: string | null; size?: number }) {
 export default function ProfilePageContent({
   profileId,
   onClose,
+  onOpenPin,
 }: {
   profileId: string;
   onClose: () => void;
+  onOpenPin: (pinId: string) => void;
 }) {
   const supabase = useMemo(() => createClient(), []);
   const router = useRouter();
@@ -430,8 +432,12 @@ export default function ProfilePageContent({
                   </div>
 
                   <div className="pt-4">
-                    {activeTab === "pins" && <PinsTab pins={pins} />}
-                    {activeTab === "reviews" && <ReviewsTab reviews={reviews} />}
+                    {activeTab === "pins" && (
+                      <PinsTab pins={pins} onOpenPin={onOpenPin} />
+                    )}
+                    {activeTab === "reviews" && (
+                      <ReviewsTab reviews={reviews} onOpenPin={onOpenPin} />
+                    )}
                     {activeTab === "follows" && (
                       <FollowsTab
                         supabase={supabase}
@@ -481,7 +487,13 @@ export default function ProfilePageContent({
   );
 }
 
-function PinsTab({ pins }: { pins: Pin[] }) {
+function PinsTab({
+  pins,
+  onOpenPin,
+}: {
+  pins: Pin[];
+  onOpenPin: (pinId: string) => void;
+}) {
   if (pins.length === 0) {
     return (
       <p className="text-sm text-neutral-500">
@@ -493,9 +505,10 @@ function PinsTab({ pins }: { pins: Pin[] }) {
     <ul className="space-y-2">
       {pins.map((pin) => (
         <li key={pin.id}>
-          <Link
-            href={`/?pin=${pin.id}`}
-            className="flex items-baseline justify-between rounded-lg px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+          <button
+            type="button"
+            onClick={() => onOpenPin(pin.id)}
+            className="flex w-full items-baseline justify-between rounded-lg px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
           >
             <div>
               <span className="font-medium">{pin.title}</span>
@@ -507,14 +520,20 @@ function PinsTab({ pins }: { pins: Pin[] }) {
             <span className="text-xs text-neutral-400">
               {new Date(pin.created_at).toLocaleDateString("en-US")}
             </span>
-          </Link>
+          </button>
         </li>
       ))}
     </ul>
   );
 }
 
-function ReviewsTab({ reviews }: { reviews: ReviewWithPin[] }) {
+function ReviewsTab({
+  reviews,
+  onOpenPin,
+}: {
+  reviews: ReviewWithPin[];
+  onOpenPin: (pinId: string) => void;
+}) {
   if (reviews.length === 0) {
     return (
       <p className="text-sm text-neutral-500">No reviews written yet.</p>
@@ -528,12 +547,13 @@ function ReviewsTab({ reviews }: { reviews: ReviewWithPin[] }) {
           className="rounded-lg bg-neutral-50 p-3 dark:bg-neutral-800/40"
         >
           <div className="flex items-center justify-between">
-            <Link
-              href={`/?pin=${r.pin_id}`}
-              className="text-sm font-medium hover:underline"
+            <button
+              type="button"
+              onClick={() => onOpenPin(r.pin_id)}
+              className="text-left text-sm font-medium hover:underline"
             >
               {r.pin_title ?? "Unknown place"}
-            </Link>
+            </button>
             <div className="flex items-center gap-2">
               <StarRow value={r.rating} />
               <span className="text-[11px] text-neutral-500">
