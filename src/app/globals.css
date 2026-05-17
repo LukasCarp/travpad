@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f7f4eb;
+  --foreground: #242321;
 }
 
 @theme inline {
@@ -12,10 +12,56 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* TravPad palette — sand / charcoal surfaces, terracotta + sage accents.
+   Overrides Tailwind's neutral / rose / violet scales so existing utility
+   classes pick up the new colors without per-component changes. */
+@theme {
+  --color-white: #fcfaf3;
+
+  /* Surfaces & text — travertine sand ↔ raw-umber charcoal */
+  --color-neutral-50: #f7f4eb;
+  --color-neutral-100: #efeadc;
+  --color-neutral-200: #e2dac6;
+  --color-neutral-300: #cdc3a8;
+  --color-neutral-400: #ada489;
+  --color-neutral-500: #8b836c;
+  --color-neutral-600: #6e6757;
+  --color-neutral-700: #514c40;
+  --color-neutral-800: #393530;
+  --color-neutral-900: #2d2a26;
+  --color-neutral-950: #242321;
+
+  /* Primary accent — bright orange */
+  --color-rose-50: #fff4ec;
+  --color-rose-100: #ffe4d2;
+  --color-rose-200: #ffc8a6;
+  --color-rose-300: #ffab79;
+  --color-rose-400: #ff9c60;
+  --color-rose-500: #ff8a4a;
+  --color-rose-600: #ed6f2b;
+  --color-rose-700: #c0561f;
+  --color-rose-800: #97441d;
+  --color-rose-900: #7b3a1d;
+  --color-rose-950: #43190b;
+
+  /* Secondary accent — sage / olive */
+  --color-violet-50: #f1f2ee;
+  --color-violet-100: #e1e3da;
+  --color-violet-200: #c8ccbc;
+  --color-violet-300: #abb09b;
+  --color-violet-400: #8e947c;
+  --color-violet-500: #7a846e;
+  --color-violet-600: #646c5a;
+  --color-violet-700: #515748;
+  --color-violet-800: #41463a;
+  --color-violet-900: #383c32;
+  --color-violet-950: #1e211b;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #242321;
+    --foreground: #f7f4eb;
   }
 }
 
@@ -25,7 +71,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* Push Leaflet's top-left controls (zoom) below the TravPad logo overlay. */
+/* Push Leaflet's top-left controls below the TravPad logo overlay. */
 .leaflet-top.leaflet-left {
   top: 4rem;
 }

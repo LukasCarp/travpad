@@ -19,7 +19,7 @@ const secretIcon = L.divIcon({
   className: "",
   html:
     '<div style="display:flex;align-items:center;justify-content:center;' +
-    "width:34px;height:34px;border-radius:9999px;background:#7c3aed;" +
+    "width:34px;height:34px;border-radius:9999px;background:#646c5a;" +
     "font-size:18px;border:2px solid #fff;" +
     'box-shadow:0 2px 6px rgba(0,0,0,0.4);">🤫</div>',
   iconSize: [34, 34],
