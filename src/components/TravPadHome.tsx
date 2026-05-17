@@ -251,6 +251,19 @@ export default function TravPadHome() {
 
   const clearMapFocus = useCallback(() => setMapFocus(null), []);
 
+  const handleShowOnMap = useCallback(() => {
+    if (!selectedPin) return;
+    // The map only renders pins whose category is in the filter, so make sure
+    // this pin's category is selected — otherwise its marker stays hidden.
+    setCategoryFilter((curr) =>
+      curr.includes(selectedPin.category)
+        ? curr
+        : [...curr, selectedPin.category]
+    );
+    setMapFocus({ lat: selectedPin.lat, lng: selectedPin.lng, zoom: 16 });
+    setSelectedId(null);
+  }, [selectedPin]);
+
   const status = useMemo(() => {
     if (loading) return "Loading pins…";
     if (loadError) return `Error: ${loadError}`;
@@ -381,6 +394,7 @@ export default function TravPadHome() {
         canDelete={canDeleteSelected}
         onEdit={startEdit}
         onDelete={handleDelete}
+        onShowOnMap={handleShowOnMap}
       />
 
       {profileViewId && (

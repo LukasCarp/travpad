@@ -7,6 +7,7 @@ import {
   BellRing,
   ChevronLeft,
   ChevronRight,
+  MapPin,
   Pencil,
   Trash2,
   X,
@@ -41,6 +42,7 @@ type Props = {
   canDelete: boolean;
   onEdit: () => void;
   onDelete: () => Promise<void>;
+  onShowOnMap: () => void;
 };
 
 export default function PinDrawer({
@@ -50,6 +52,7 @@ export default function PinDrawer({
   canDelete,
   onEdit,
   onDelete,
+  onShowOnMap,
 }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const { user } = useAuth();
@@ -282,26 +285,36 @@ export default function PinDrawer({
                   )}
                 </div>
 
-                {user && (
+                <div className="flex flex-wrap gap-2">
+                  {user && (
+                    <button
+                      type="button"
+                      onClick={handleFollow}
+                      disabled={followBusy}
+                      className={
+                        "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium shadow transition disabled:opacity-50 " +
+                        (isFollowing
+                          ? "bg-violet-600 text-white hover:bg-violet-700"
+                          : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700")
+                      }
+                    >
+                      {isFollowing ? (
+                        <BellRing className="h-4 w-4" />
+                      ) : (
+                        <Bell className="h-4 w-4" />
+                      )}
+                      {isFollowing ? "Following" : "Follow"}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={handleFollow}
-                    disabled={followBusy}
-                    className={
-                      "inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium shadow transition disabled:opacity-50 " +
-                      (isFollowing
-                        ? "bg-violet-600 text-white hover:bg-violet-700"
-                        : "bg-neutral-100 text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700")
-                    }
+                    onClick={onShowOnMap}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
                   >
-                    {isFollowing ? (
-                      <BellRing className="h-4 w-4" />
-                    ) : (
-                      <Bell className="h-4 w-4" />
-                    )}
-                    {isFollowing ? "Following" : "Follow"}
+                    <MapPin className="h-4 w-4" />
+                    Show on map
                   </button>
-                )}
+                </div>
 
                 {pin.short_description && (
                   <p className="border-l-2 border-rose-300 pl-3 text-base font-medium italic text-neutral-700 dark:border-rose-800 dark:text-neutral-200">
