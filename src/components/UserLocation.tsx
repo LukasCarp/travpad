@@ -106,7 +106,7 @@ export default function UserLocation() {
     <>
       <div
         ref={containerRef}
-        className="absolute right-4 top-44 z-[500] flex flex-col items-end gap-2 md:top-28"
+        className="absolute right-4 top-44 z-[500] flex flex-col items-end gap-2 md:top-36"
       >
         <button
           type="button"
