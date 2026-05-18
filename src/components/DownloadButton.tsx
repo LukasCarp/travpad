@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useMap } from "react-leaflet";
 import { Download, X } from "lucide-react";
 import { downloadPack } from "@/lib/offline/download";
+import { useAuth } from "./AuthProvider";
 
 type Props = {
   tileTemplate: string;
@@ -11,6 +13,8 @@ type Props = {
 
 export default function DownloadButton({ tileTemplate }: Props) {
   const map = useMap();
+  const router = useRouter();
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -50,9 +54,15 @@ export default function DownloadButton({ tileTemplate }: Props) {
         tileTemplate,
         onProgress: (done, total) => setProgress({ done, total }),
       });
-      setResult(
-        `Saved “${pack.name}” — ${pack.tileCount} tiles, ${pack.poiCount} pins.`
-      );
+      if (user) {
+        // Take the user to their Offline maps tab — the saved pack shows there.
+        setOpen(false);
+        router.push(`/?profile=${user.id}&tab=offline`);
+      } else {
+        setResult(
+          `Saved “${pack.name}” — ${pack.tileCount} tiles, ${pack.poiCount} pins.`
+        );
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Download failed.");
     } finally {
