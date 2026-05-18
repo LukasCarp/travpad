@@ -382,7 +382,9 @@ export default function TravPadHome() {
         <button
           type="button"
           onClick={() =>
-            setBasemap((b) => (b === "osm" ? "voyager" : "osm"))
+            setBasemap((b) =>
+              b === "osm" ? "voyager" : b === "voyager" ? "toner" : "osm"
+            )
           }
           aria-label="Switch map style"
           title="Switch map style"
