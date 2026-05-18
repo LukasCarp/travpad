@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Layers2, LogIn, MapPin, Plus } from "lucide-react";
+import { Layers, LogIn, MapPin, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { NewPin, Pin } from "@/lib/supabase";
 import AddPinFab from "./AddPinFab";
@@ -361,8 +361,8 @@ export default function TravPadHome() {
           />
         )}
 
-        {/* Profile / sign-in — top-right corner */}
-        <div className="absolute right-4 top-4 z-[500]">
+        {/* Profile / sign-in — level with the category filter */}
+        <div className="absolute right-4 top-20 z-[500]">
           {authLoading ? (
             <div className="h-9 w-20 animate-pulse rounded-full bg-white/80 dark:bg-neutral-900/80" />
           ) : user ? (
@@ -390,7 +390,7 @@ export default function TravPadHome() {
           title="Switch map style"
           className="fixed bottom-20 left-4 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xl ring-1 ring-black/10 transition hover:bg-neutral-50 hover:text-rose-500 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
         >
-          <Layers2 className="h-5 w-5" />
+          <Layers className="h-5 w-5" />
         </button>
 
         <div className="pointer-events-none fixed bottom-6 left-4 z-[400]">
