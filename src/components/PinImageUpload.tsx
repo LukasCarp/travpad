@@ -53,8 +53,8 @@ export default function PinImageUpload({
             const gps = await exifr.gps(file);
             if (
               gps &&
-              typeof gps.latitude === "number" &&
-              typeof gps.longitude === "number"
+              Number.isFinite(gps.latitude) &&
+              Number.isFinite(gps.longitude)
             ) {
               onGpsDetected({ lat: gps.latitude, lng: gps.longitude });
               announcedThisBatch = true;

@@ -34,8 +34,8 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
       const gps = await exifr.gps(file);
       if (
         !gps ||
-        typeof gps.latitude !== "number" ||
-        typeof gps.longitude !== "number"
+        !Number.isFinite(gps.latitude) ||
+        !Number.isFinite(gps.longitude)
       ) {
         setError("The image has no GPS data.");
         return;
