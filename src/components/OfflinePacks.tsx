@@ -10,7 +10,11 @@ import {
   type OfflinePack,
 } from "@/lib/offline/db";
 
-export default function OfflinePacks() {
+export default function OfflinePacks({
+  onCountChange,
+}: {
+  onCountChange?: (count: number) => void;
+}) {
   const [packs, setPacks] = useState<OfflinePack[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
@@ -24,11 +28,13 @@ export default function OfflinePacks() {
       list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       setPacks(list);
       setActiveId(active);
+      onCountChange?.(list.length);
     } catch {
       setPacks([]);
+      onCountChange?.(0);
     }
     setLoaded(true);
-  }, []);
+  }, [onCountChange]);
 
   useEffect(() => {
     load();

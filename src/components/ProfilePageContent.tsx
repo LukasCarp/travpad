@@ -15,17 +15,20 @@ import {
 import { Drawer } from "vaul";
 import { createClient } from "@/lib/supabase/client";
 import type { List, Pin, Profile, Review } from "@/lib/supabase";
+import { listPacks } from "@/lib/offline/db";
 import { useAuth } from "./AuthProvider";
 import Notifications from "./Notifications";
 import OfflinePacks from "./OfflinePacks";
 import ProfileEditModal from "./ProfileEditModal";
 
-type Tab = "pins" | "reviews" | "follows" | "lists";
+type Tab = "offline" | "pins" | "reviews" | "follows" | "lists";
 
-const VALID_TABS: Tab[] = ["pins", "reviews", "follows", "lists"];
+const VALID_TABS: Tab[] = ["offline", "pins", "reviews", "follows", "lists"];
 
-function parseTab(raw: string | null): Tab {
-  return VALID_TABS.includes(raw as Tab) ? (raw as Tab) : "pins";
+// The Offline maps tab is device-local, so it's only valid on your own profile.
+function parseTab(raw: string | null, isOwn: boolean): Tab {
+  const tab = VALID_TABS.includes(raw as Tab) ? (raw as Tab) : "pins";
+  return tab === "offline" && !isOwn ? "pins" : tab;
 }
 
 type FollowProfile = Pick<Profile, "id" | "display_name" | "avatar_path">;
@@ -112,25 +115,26 @@ export default function ProfilePageContent({
   const [lists, setLists] = useState<List[]>([]);
   const [isFollowing, setIsFollowing] = useState(false);
 
+  const isOwn = !!user && user.id === profileId;
+
   const [activeTab, setActiveTab] = useState<Tab>(() =>
-    parseTab(searchParams.get("tab"))
+    parseTab(searchParams.get("tab"), isOwn)
   );
   const [editOpen, setEditOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [followBusy, setFollowBusy] = useState(false);
-
-  const isOwn = !!user && user.id === profileId;
+  const [offlineCount, setOfflineCount] = useState(0);
 
   // Push tab changes back to the URL so /?profile=<id>&tab=reviews can be
   // shared and bookmarked directly. Skip if we're already in sync.
   useEffect(() => {
-    const urlTab = parseTab(searchParams.get("tab"));
+    const urlTab = parseTab(searchParams.get("tab"), isOwn);
     if (urlTab === activeTab) return;
     const sp = new URLSearchParams(searchParams.toString());
     sp.set("tab", activeTab);
     router.replace(`?${sp.toString()}`, { scroll: false });
-  }, [activeTab, router, searchParams]);
+  }, [activeTab, router, searchParams, isOwn]);
 
   async function handleSignOut() {
     await signOut();
@@ -287,6 +291,15 @@ export default function ProfilePageContent({
     loadAll();
   }, [loadAll]);
 
+  // Offline packs live in IndexedDB on this device — load the count for the
+  // tab label independently of the profile data.
+  useEffect(() => {
+    if (!isOwn) return;
+    listPacks()
+      .then((p) => setOfflineCount(p.length))
+      .catch(() => {});
+  }, [isOwn]);
+
   const direction = isMobile ? "bottom" : "right";
   const avatar = profile ? avatarUrl(supabase, profile.avatar_path) : null;
 
@@ -381,32 +394,8 @@ export default function ProfilePageContent({
                       </span>
                     </div>
                   </div>
-                  <div className="flex flex-none flex-col items-end gap-2">
-                    {isOwn ? (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => setEditOpen(true)}
-                          className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-                        >
-                          <Pencil className="h-4 w-4" />
-                          Edit
-                        </button>
-                        {user?.email && (
-                          <p className="max-w-[12rem] truncate text-xs text-neutral-500">
-                            {user.email}
-                          </p>
-                        )}
-                        <button
-                          type="button"
-                          onClick={handleSignOut}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Sign out
-                        </button>
-                      </>
-                    ) : user ? (
+                  {!isOwn && user && (
+                    <div className="flex flex-none flex-col items-end gap-2">
                       <button
                         type="button"
                         onClick={handleFollow}
@@ -430,27 +419,58 @@ export default function ProfilePageContent({
                           </>
                         )}
                       </button>
-                    ) : null}
-                  </div>
+                    </div>
+                  )}
                 </section>
 
+                {isOwn && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditOpen(true)}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-100 dark:border-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-800"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sign out
+                    </button>
+                    {user?.email && (
+                      <span className="ml-auto max-w-[12rem] truncate text-xs text-neutral-500">
+                        {user.email}
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <section>
-                  <div className="border-b border-neutral-200 dark:border-neutral-800">
+                  <div className="overflow-x-auto border-b border-neutral-200 dark:border-neutral-800">
                     <nav className="-mb-px flex gap-6 text-sm">
                       {(
                         [
+                          ...(isOwn
+                            ? ([
+                                ["offline", `Offline maps (${offlineCount})`],
+                              ] as [Tab, string][])
+                            : []),
                           ["pins", `Pins (${pins.length})`],
                           ["lists", `Lists (${lists.length})`],
                           ["reviews", `Reviews (${reviews.length})`],
                           ["follows", `Followers (${followers.length})`],
-                        ] as const
+                        ] as [Tab, string][]
                       ).map(([key, label]) => (
                         <button
                           key={key}
                           type="button"
                           onClick={() => setActiveTab(key)}
                           className={
-                            "border-b-2 px-1 py-2 font-medium transition " +
+                            "whitespace-nowrap border-b-2 px-1 py-2 font-medium transition " +
                             (activeTab === key
                               ? "border-rose-500 text-rose-600 dark:text-rose-400"
                               : "border-transparent text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300")
@@ -463,6 +483,9 @@ export default function ProfilePageContent({
                   </div>
 
                   <div className="pt-4">
+                    {activeTab === "offline" && isOwn && (
+                      <OfflinePacks onCountChange={setOfflineCount} />
+                    )}
                     {activeTab === "pins" && (
                       <PinsTab pins={pins} onOpenPin={onOpenPin} />
                     )}
@@ -481,15 +504,6 @@ export default function ProfilePageContent({
                     )}
                   </div>
                 </section>
-
-                {isOwn && (
-                  <section className="border-t border-neutral-200 pt-4 dark:border-neutral-800">
-                    <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
-                      Offline maps
-                    </h2>
-                    <OfflinePacks />
-                  </section>
-                )}
               </div>
             </div>
           )}
