@@ -1,13 +1,11 @@
 // TravPad offline Service Worker.
 //
-// Strategy (always network-first, so the online experience is unchanged):
-//   - map tiles       -> network; if offline, serve the downloaded copy
-//                        from IndexedDB.
-//   - the app's files -> network; cache the result; if offline, serve the
-//                        cached copy (Cache API) so the app still starts.
-//   - everything else -> left untouched.
+// Deliberately narrow: it only touches map tiles, hashed build assets and
+// top-level page navigations. It does NOT intercept Next.js's internal
+// navigation (RSC) requests or API calls — those are left to the browser so
+// in-app navigation keeps working normally.
 
-const CACHE = "travpad-shell-v1";
+const CACHE = "travpad-shell-v2";
 
 const TILE_HOSTS = [
   "tile.openstreetmap.org",
@@ -31,8 +29,7 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Minimal read from the offline IndexedDB (the same DB src/lib/offline/db.ts
-// writes to). Only used as the offline fallback for tiles.
+// Minimal read from the offline IndexedDB — used as the tile fallback.
 function openOfflineDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open("travpad-offline", 1);
@@ -93,20 +90,42 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // The app's own files — network first, cache for offline start-up.
-  if (url.origin === self.location.origin) {
+  if (url.origin !== self.location.origin) return;
+
+  // Top-level page loads — network first; offline, serve the cached shell.
+  if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
         try {
           const res = await fetch(request);
           if (res.ok && !res.redirected) {
             const cache = await caches.open(CACHE);
+            cache.put("app-shell", res.clone()).catch(() => {});
+          }
+          return res;
+        } catch {
+          const shell = await caches.match("app-shell");
+          return shell || new Response("Offline", { status: 504 });
+        }
+      })()
+    );
+    return;
+  }
+
+  // Hashed build assets — cache first (immutable).
+  if (url.pathname.startsWith("/_next/static/")) {
+    event.respondWith(
+      (async () => {
+        const cached = await caches.match(request);
+        if (cached) return cached;
+        try {
+          const res = await fetch(request);
+          if (res.ok) {
+            const cache = await caches.open(CACHE);
             cache.put(request, res.clone()).catch(() => {});
           }
           return res;
         } catch {
-          const cached = await caches.match(request);
-          if (cached) return cached;
           return new Response("", { status: 504 });
         }
       })()
@@ -114,5 +133,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else (e.g. Supabase API calls) — leave to the browser.
+  // Everything else (Next.js navigation/RSC requests, API calls) — leave to
+  // the browser so in-app navigation is never intercepted.
 });
