@@ -1,9 +1,16 @@
 // Downloads a map area for offline use: the map tiles for the visible
-// bounding box (current zoom ± 1) plus every pin inside that box.
+// bounding box (current zoom ± 1), every pin inside that box, and a
+// downsized copy of each pin photo.
 
 import { createClient } from "@/lib/supabase/client";
 import type { Pin } from "@/lib/supabase";
-import { savePack, savePois, saveTile, type OfflinePack } from "./db";
+import {
+  saveImages,
+  savePack,
+  savePois,
+  saveTile,
+  type OfflinePack,
+} from "./db";
 
 const PIN_COLUMNS =
   "id, title, category, subcategory, short_description, description, services, secret, details, lat, lng, created_by, created_by_name, created_at, images";
@@ -70,6 +77,7 @@ function tileUrls(
 async function downloadTiles(
   urls: string[],
   packId: string,
+  total: number,
   onProgress: (done: number, total: number) => void
 ): Promise<number> {
   let done = 0;
@@ -88,7 +96,43 @@ async function downloadTiles(
           // a failed tile is skipped, not fatal
         } finally {
           done++;
-          onProgress(done, urls.length);
+          onProgress(done, total);
+        }
+      })
+    );
+  }
+  return saved;
+}
+
+type ImageJob = { path: string; url: string; fallbackUrl: string };
+
+async function downloadImages(
+  jobs: ImageJob[],
+  packId: string,
+  baseDone: number,
+  total: number,
+  onProgress: (done: number, total: number) => void
+): Promise<number> {
+  let done = baseDone;
+  let saved = 0;
+  const BATCH = 4;
+  for (let i = 0; i < jobs.length; i += BATCH) {
+    await Promise.all(
+      jobs.slice(i, i + BATCH).map(async ({ path, url, fallbackUrl }) => {
+        try {
+          // The transform URL needs Supabase image transformations; if that's
+          // unavailable, fall back to the (already <=1 MB) original.
+          let res = await fetch(url);
+          if (!res.ok) res = await fetch(fallbackUrl);
+          if (res.ok) {
+            await saveImages(packId, [{ path, blob: await res.blob() }]);
+            saved++;
+          }
+        } catch {
+          // a failed image is skipped, not fatal
+        } finally {
+          done++;
+          onProgress(done, total);
         }
       })
     );
@@ -106,12 +150,10 @@ export async function downloadPack(opts: {
   const { name, bounds, zoom, tileTemplate, onProgress } = opts;
   const minZoom = Math.max(1, Math.round(zoom) - 1);
   const maxZoom = Math.min(19, Math.round(zoom) + 1);
-
   const packId = crypto.randomUUID();
-  const urls = tileUrls(tileTemplate, bounds, minZoom, maxZoom);
-  const tileCount = await downloadTiles(urls, packId, onProgress);
 
-  // Pins inside the bounding box.
+  // Pins inside the bounding box — fetched first so their photos count
+  // toward the progress total.
   const supabase = createClient();
   const { data } = await supabase
     .from("pins_view")
@@ -121,6 +163,31 @@ export async function downloadPack(opts: {
     .gte("lng", bounds.west)
     .lte("lng", bounds.east);
   const pins = (data ?? []) as Pin[];
+
+  const imageJobs: ImageJob[] = pins.flatMap((pin) =>
+    (pin.images ?? []).map((img) => {
+      const bucket = supabase.storage.from("pin-images");
+      return {
+        path: img.storage_path,
+        url: bucket.getPublicUrl(img.storage_path, {
+          transform: { width: 640, quality: 55 },
+        }).data.publicUrl,
+        fallbackUrl: bucket.getPublicUrl(img.storage_path).data.publicUrl,
+      };
+    })
+  );
+
+  const urls = tileUrls(tileTemplate, bounds, minZoom, maxZoom);
+  const total = urls.length + imageJobs.length;
+
+  const tileCount = await downloadTiles(urls, packId, total, onProgress);
+  const imageCount = await downloadImages(
+    imageJobs,
+    packId,
+    urls.length,
+    total,
+    onProgress
+  );
   await savePois(packId, pins);
 
   const pack: OfflinePack = {
@@ -132,6 +199,7 @@ export async function downloadPack(opts: {
     createdAt: new Date().toISOString(),
     tileCount,
     poiCount: pins.length,
+    imageCount,
   };
   await savePack(pack);
   return pack;

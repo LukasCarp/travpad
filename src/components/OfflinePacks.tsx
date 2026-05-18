@@ -76,6 +76,7 @@ export default function OfflinePacks({
               <div className="truncate font-medium">{pack.name}</div>
               <div className="text-xs text-neutral-500">
                 {pack.tileCount} tiles · {pack.poiCount} pins ·{" "}
+                {pack.imageCount ?? 0} photos ·{" "}
                 {new Date(pack.createdAt).toLocaleDateString("en-US")}
               </div>
             </div>

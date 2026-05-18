@@ -1,15 +1,16 @@
 // IndexedDB data layer for the offline-map feature.
 //
-// Three kinds of data are stored locally:
-//   - packs : metadata for each downloaded area ("Day 1 — Hike" etc.)
-//   - tiles : the map images (one row per tile URL) for a pack
-//   - pois  : the pins inside a pack's area
+// Data stored locally:
+//   - packs  : metadata for each downloaded area ("Day 1 — Hike" etc.)
+//   - tiles  : the map images (one row per tile URL) for a pack
+//   - pois   : the pins inside a pack's area
+//   - images : a downsized copy of each pin photo in a pack
 // A small `meta` store remembers which pack is currently active.
 
 import type { Pin } from "@/lib/supabase";
 
 const DB_NAME = "travpad-offline";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export type OfflinePack = {
   id: string;
@@ -20,6 +21,7 @@ export type OfflinePack = {
   createdAt: string;
   tileCount: number;
   poiCount: number;
+  imageCount: number;
 };
 
 function openDB(): Promise<IDBDatabase> {
@@ -42,6 +44,13 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains("meta")) {
         db.createObjectStore("meta", { keyPath: "key" });
+      }
+      if (!db.objectStoreNames.contains("images")) {
+        const images = db.createObjectStore("images", {
+          keyPath: ["packId", "path"],
+        });
+        images.createIndex("packId", "packId", { unique: false });
+        images.createIndex("path", "path", { unique: false });
       }
     };
     req.onsuccess = () => resolve(req.result);
@@ -106,9 +115,9 @@ export function getPack(id: string): Promise<OfflinePack | undefined> {
 }
 
 export function deletePack(id: string): Promise<void> {
-  return run(["packs", "tiles", "pois"], "readwrite", async (tx) => {
+  return run(["packs", "tiles", "pois", "images"], "readwrite", async (tx) => {
     tx.objectStore("packs").delete(id);
-    for (const storeName of ["tiles", "pois"] as const) {
+    for (const storeName of ["tiles", "pois", "images"] as const) {
       const index = tx.objectStore(storeName).index("packId");
       const keys = await reqAsPromise(index.getAllKeys(id));
       for (const key of keys) {
@@ -156,6 +165,31 @@ export function getPois(packId: string): Promise<Pin[]> {
       tx.objectStore("pois").index("packId").getAll(packId)
     )) as { pin: Pin }[];
     return rows.map((r) => r.pin);
+  });
+}
+
+// --- Images ----------------------------------------------------------------
+
+export function saveImages(
+  packId: string,
+  items: { path: string; blob: Blob }[]
+): Promise<void> {
+  return run("images", "readwrite", (tx) => {
+    const store = tx.objectStore("images");
+    for (const { path, blob } of items) {
+      store.put({ packId, path, blob });
+    }
+  });
+}
+
+// A downloaded copy of a pin image, looked up by its storage path across any
+// pack. Used as the offline fallback when the network image won't load.
+export function getOfflineImageBlob(path: string): Promise<Blob | undefined> {
+  return run("images", "readonly", async (tx) => {
+    const row = (await reqAsPromise(
+      tx.objectStore("images").index("path").get(path)
+    )) as { blob: Blob } | undefined;
+    return row?.blob;
   });
 }
 

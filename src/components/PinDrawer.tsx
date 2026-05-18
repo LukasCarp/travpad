@@ -23,6 +23,7 @@ import {
 } from "@/lib/pinTaxonomy";
 import { useAuth } from "./AuthProvider";
 import AddToList from "./AddToList";
+import OfflineImage from "./OfflineImage";
 import PinReviews from "./PinReviews";
 
 function useMediaQuery(query: string): boolean {
@@ -68,13 +69,14 @@ export default function PinDrawer({
 
   const isMobile = useMediaQuery("(max-width: 768px)");
 
-  const imageUrls = useMemo(() => {
+  const images = useMemo(() => {
     if (!pin) return [];
-    return (pin.images ?? []).map(
-      (img) =>
-        supabase.storage.from("pin-images").getPublicUrl(img.storage_path).data
-          .publicUrl
-    );
+    return (pin.images ?? []).map((img) => ({
+      path: img.storage_path,
+      url: supabase.storage
+        .from("pin-images")
+        .getPublicUrl(img.storage_path).data.publicUrl,
+    }));
   }, [pin, supabase]);
 
   useEffect(() => {
@@ -201,24 +203,22 @@ export default function PinDrawer({
 
           {pin && (
             <div className="flex-1 overflow-y-auto">
-              {imageUrls.length > 0 && (
+              {images.length > 0 && (
                 <div className="relative bg-neutral-100 dark:bg-neutral-800">
                   <div className="aspect-[4/3] w-full">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={imageUrls[activeIdx]}
-                      alt=""
+                    <OfflineImage
+                      path={images[activeIdx].path}
+                      src={images[activeIdx].url}
                       className="h-full w-full object-cover"
                     />
                   </div>
-                  {imageUrls.length > 1 && (
+                  {images.length > 1 && (
                     <>
                       <button
                         type="button"
                         onClick={() =>
                           setActiveIdx(
-                            (i) =>
-                              (i - 1 + imageUrls.length) % imageUrls.length
+                            (i) => (i - 1 + images.length) % images.length
                           )
                         }
                         className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/85 p-2 text-neutral-700 shadow hover:bg-white"
@@ -229,7 +229,7 @@ export default function PinDrawer({
                       <button
                         type="button"
                         onClick={() =>
-                          setActiveIdx((i) => (i + 1) % imageUrls.length)
+                          setActiveIdx((i) => (i + 1) % images.length)
                         }
                         className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/85 p-2 text-neutral-700 shadow hover:bg-white"
                         aria-label="Next image"
@@ -237,18 +237,18 @@ export default function PinDrawer({
                         <ChevronRight className="h-4 w-4" />
                       </button>
                       <div className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/55 px-2 py-0.5 text-xs text-white">
-                        {activeIdx + 1} / {imageUrls.length}
+                        {activeIdx + 1} / {images.length}
                       </div>
                     </>
                   )}
                 </div>
               )}
 
-              {imageUrls.length > 1 && (
+              {images.length > 1 && (
                 <div className="flex gap-1 overflow-x-auto px-3 py-2">
-                  {imageUrls.map((url, i) => (
+                  {images.map((img, i) => (
                     <button
-                      key={url}
+                      key={img.path}
                       type="button"
                       onClick={() => setActiveIdx(i)}
                       className={
@@ -259,10 +259,9 @@ export default function PinDrawer({
                       }
                       aria-label={`Image ${i + 1}`}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={url}
-                        alt=""
+                      <OfflineImage
+                        path={img.path}
+                        src={img.url}
                         className="h-full w-full object-cover"
                       />
                     </button>

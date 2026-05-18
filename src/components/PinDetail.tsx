@@ -5,31 +5,32 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { Pin } from "@/lib/supabase";
 import { iconForService, labelForService } from "@/lib/pinTaxonomy";
+import OfflineImage from "./OfflineImage";
 
 export default function PinDetail({ pin }: { pin: Pin }) {
   const supabase = useMemo(() => createClient(), []);
   const [showLong, setShowLong] = useState(false);
 
-  const imageUrls = useMemo(
+  const images = useMemo(
     () =>
-      (pin.images ?? []).map(
-        (img) =>
-          supabase.storage.from("pin-images").getPublicUrl(img.storage_path).data
-            .publicUrl
-      ),
+      (pin.images ?? []).map((img) => ({
+        path: img.storage_path,
+        url: supabase.storage
+          .from("pin-images")
+          .getPublicUrl(img.storage_path).data.publicUrl,
+      })),
     [pin.images, supabase]
   );
 
   return (
     <div className="max-w-xs space-y-2">
-      {imageUrls.length > 0 && (
+      {images.length > 0 && (
         <div className="-mx-1 flex gap-1 overflow-x-auto px-1">
-          {imageUrls.map((url) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={url}
-              src={url}
-              alt=""
+          {images.map((img) => (
+            <OfflineImage
+              key={img.path}
+              path={img.path}
+              src={img.url}
               className="h-24 w-24 flex-none rounded object-cover"
             />
           ))}
