@@ -17,6 +17,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { List, Pin, Profile, Review } from "@/lib/supabase";
 import { useAuth } from "./AuthProvider";
 import Notifications from "./Notifications";
+import OfflinePacks from "./OfflinePacks";
 import ProfileEditModal from "./ProfileEditModal";
 
 type Tab = "pins" | "reviews" | "follows" | "lists";
@@ -480,6 +481,15 @@ export default function ProfilePageContent({
                     )}
                   </div>
                 </section>
+
+                {isOwn && (
+                  <section className="border-t border-neutral-200 pt-4 dark:border-neutral-800">
+                    <h2 className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                      Offline maps
+                    </h2>
+                    <OfflinePacks />
+                  </section>
+                )}
               </div>
             </div>
           )}
