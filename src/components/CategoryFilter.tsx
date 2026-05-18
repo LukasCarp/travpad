@@ -73,7 +73,7 @@ export default function CategoryFilter({ active, onChange }: Props) {
         className={
           "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium shadow-lg ring-1 ring-black/10 transition " +
           (count > 0
-            ? "bg-violet-600 text-white hover:bg-violet-700"
+            ? "bg-rose-500 text-white hover:bg-rose-600"
             : "bg-white/95 text-neutral-700 hover:bg-white dark:bg-neutral-900/95 dark:text-neutral-200")
         }
       >
