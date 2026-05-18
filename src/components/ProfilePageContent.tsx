@@ -16,6 +16,7 @@ import { Drawer } from "vaul";
 import { createClient } from "@/lib/supabase/client";
 import type { List, Pin, Profile, Review } from "@/lib/supabase";
 import { useAuth } from "./AuthProvider";
+import Notifications from "./Notifications";
 import ProfileEditModal from "./ProfileEditModal";
 
 type Tab = "pins" | "reviews" | "follows" | "lists";
@@ -345,7 +346,10 @@ export default function ProfilePageContent({
             <div className="flex-1 overflow-y-auto">
               <div className="space-y-6 p-6 pt-12">
                 <section className="flex flex-wrap items-start gap-4">
-                  <Avatar url={avatar} size={isMobile ? 72 : 96} />
+                  <div className="flex flex-col items-center gap-2">
+                    <Avatar url={avatar} size={isMobile ? 72 : 96} />
+                    {isOwn && <Notifications onOpenPin={onOpenPin} />}
+                  </div>
                   <div className="min-w-0 flex-1 space-y-1">
                     <h1 className="truncate text-2xl font-semibold leading-tight">
                       {profile.display_name}

@@ -1,18 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bell } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
-import { useAuth } from "./AuthProvider";
+import { useEffect, useState } from "react";
+import { Bell, X } from "lucide-react";
+import { Drawer } from "vaul";
+import { useNotifications } from "./NotificationsProvider";
 
-type HistoryRow = {
-  id: string;
-  pin_id: string;
-  action: string;
-  created_at: string;
-  editor_name: string | null;
-  pin_title: string;
-};
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(false);
+  useEffect(() => {
+    const m = window.matchMedia(query);
+    setMatches(m.matches);
+    const handler = (e: MediaQueryListEvent) => setMatches(e.matches);
+    m.addEventListener("change", handler);
+    return () => m.removeEventListener("change", handler);
+  }, [query]);
+  return matches;
+}
 
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -29,101 +32,25 @@ type Props = {
 };
 
 export default function Notifications({ onOpenPin }: Props) {
-  const supabase = useMemo(() => createClient(), []);
-  const { user } = useAuth();
-  const ref = useRef<HTMLDivElement | null>(null);
-
+  const { rows, unread, reload, markAllSeen } = useNotifications();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   const [open, setOpen] = useState(false);
-  const [rows, setRows] = useState<HistoryRow[]>([]);
-  const [seenAt, setSeenAt] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    if (!user) return;
-
-    const [{ data: follows }, { data: profile }] = await Promise.all([
-      supabase.from("pin_follows").select("pin_id").eq("user_id", user.id),
-      supabase
-        .from("profiles")
-        .select("notifications_seen_at")
-        .eq("id", user.id)
-        .maybeSingle(),
-    ]);
-
-    setSeenAt((profile?.notifications_seen_at as string | null) ?? null);
-
-    const pinIds = (follows ?? []).map((f) => f.pin_id as string);
-    if (pinIds.length === 0) {
-      setRows([]);
-      return;
-    }
-
-    const { data: history } = await supabase
-      .from("pin_history_view")
-      .select(
-        "id, pin_id, action, created_at, editor_name, pin_title, edited_by"
-      )
-      .in("pin_id", pinIds)
-      .neq("edited_by", user.id)
-      .order("created_at", { ascending: false })
-      .limit(30);
-
-    setRows((history ?? []) as HistoryRow[]);
-  }, [supabase, user]);
-
-  useEffect(() => {
-    load();
-  }, [load]);
-
-  // Refetch when the tab regains focus and every 45s, so the badge appears
-  // without a manual reload.
-  useEffect(() => {
-    function onVisible() {
-      if (document.visibilityState === "visible") void load();
-    }
-    document.addEventListener("visibilitychange", onVisible);
-    const id = window.setInterval(() => void load(), 45000);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisible);
-      window.clearInterval(id);
-    };
-  }, [load]);
-
-  useEffect(() => {
-    if (!open) return;
-    function onDocClick(e: MouseEvent) {
-      if (!ref.current?.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
-  }, [open]);
-
-  const unread = useMemo(() => {
-    if (!seenAt) return rows.length;
-    const cutoff = new Date(seenAt).getTime();
-    return rows.filter((r) => new Date(r.created_at).getTime() > cutoff).length;
-  }, [rows, seenAt]);
-
-  async function toggleOpen() {
-    const next = !open;
+  async function handleOpenChange(next: boolean) {
     setOpen(next);
-    if (next && user) {
-      await load();
-      const now = new Date().toISOString();
-      setSeenAt(now);
-      await supabase
-        .from("profiles")
-        .update({ notifications_seen_at: now })
-        .eq("id", user.id);
+    if (next) {
+      reload();
+      await markAllSeen();
     }
   }
 
-  if (!user) return null;
+  const direction = isMobile ? "bottom" : "right";
 
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
         type="button"
-        onClick={toggleOpen}
+        onClick={() => handleOpenChange(true)}
         aria-label="Notifications"
         className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg ring-1 ring-black/10 transition hover:bg-neutral-50 dark:bg-neutral-900 dark:ring-white/10 dark:hover:bg-neutral-800"
       >
@@ -135,43 +62,75 @@ export default function Notifications({ onOpenPin }: Props) {
         )}
       </button>
 
-      {open && (
-        <div className="absolute right-0 top-full mt-2 w-80 overflow-hidden rounded-xl bg-white shadow-xl ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/10">
-          <div className="border-b border-neutral-100 px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500 dark:border-neutral-800">
-            Updates on pins you follow
-          </div>
-          <div className="max-h-96 overflow-y-auto">
-            {rows.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-neutral-500">
-                No updates yet. Follow a pin to get edit notifications.
-              </p>
-            ) : (
-              rows.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => {
-                    onOpenPin(r.pin_id);
-                    setOpen(false);
-                  }}
-                  className="flex w-full flex-col gap-0.5 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                >
-                  <span className="text-sm text-neutral-700 dark:text-neutral-200">
-                    <span className="font-medium">
-                      {r.editor_name ?? "Someone"}
-                    </span>{" "}
-                    {r.action === "created" ? "created" : "updated"}{" "}
-                    <span className="font-medium">{r.pin_title}</span>
-                  </span>
-                  <span className="text-[11px] text-neutral-500">
-                    {timeAgo(r.created_at)}
-                  </span>
-                </button>
-              ))
+      <Drawer.Root
+        open={open}
+        onOpenChange={handleOpenChange}
+        direction={direction}
+      >
+        <Drawer.Portal>
+          <Drawer.Overlay className="fixed inset-0 z-[940] bg-black/30 backdrop-blur-[1px]" />
+          <Drawer.Content
+            className={
+              "fixed z-[950] flex flex-col bg-white shadow-2xl outline-none ring-1 ring-black/5 dark:bg-neutral-900 dark:ring-white/10 " +
+              (isMobile
+                ? "inset-x-0 bottom-0 max-h-[85vh] rounded-t-2xl"
+                : "inset-y-0 right-0 w-full max-w-md")
+            }
+          >
+            {isMobile && (
+              <div
+                aria-hidden="true"
+                className="mx-auto mt-2 h-1.5 w-12 flex-none rounded-full bg-neutral-300 dark:bg-neutral-700"
+              />
             )}
-          </div>
-        </div>
-      )}
-    </div>
+
+            <div className="flex items-center justify-between border-b border-neutral-200 p-4 dark:border-neutral-800">
+              <Drawer.Title className="text-lg font-semibold">
+                Notifications
+              </Drawer.Title>
+              <button
+                type="button"
+                onClick={() => handleOpenChange(false)}
+                aria-label="Close"
+                className="rounded p-1 text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              {rows.length === 0 ? (
+                <p className="px-4 py-10 text-center text-sm text-neutral-500">
+                  No updates yet. Follow a pin to get edit notifications.
+                </p>
+              ) : (
+                rows.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => {
+                      onOpenPin(r.pin_id);
+                      setOpen(false);
+                    }}
+                    className="flex w-full flex-col gap-0.5 border-b border-neutral-100 px-4 py-3 text-left hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-800"
+                  >
+                    <span className="text-sm text-neutral-700 dark:text-neutral-200">
+                      <span className="font-medium">
+                        {r.editor_name ?? "Someone"}
+                      </span>{" "}
+                      {r.action === "created" ? "created" : "updated"}{" "}
+                      <span className="font-medium">{r.pin_title}</span>
+                    </span>
+                    <span className="text-[11px] text-neutral-500">
+                      {timeAgo(r.created_at)}
+                    </span>
+                  </button>
+                ))
+              )}
+            </div>
+          </Drawer.Content>
+        </Drawer.Portal>
+      </Drawer.Root>
+    </>
   );
 }

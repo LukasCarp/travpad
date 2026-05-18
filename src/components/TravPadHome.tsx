@@ -12,7 +12,7 @@ import AddPinForm from "./AddPinForm";
 import CategoryFilter, { SECRET_FILTER } from "./CategoryFilter";
 import ListDrawer from "./ListDrawer";
 import LoginModal from "./LoginModal";
-import Notifications from "./Notifications";
+import { NotificationsProvider } from "./NotificationsProvider";
 import PinDrawer from "./PinDrawer";
 import ProfileMenu from "./ProfileMenu";
 import ProfilePageContent from "./ProfilePageContent";
@@ -331,7 +331,8 @@ export default function TravPadHome() {
   const showCreateForm = pending && !!user && !editingId;
 
   return (
-    <div className="relative h-screen w-full">
+    <NotificationsProvider>
+      <div className="relative h-screen w-full">
       <main className="relative h-full w-full">
         <MapCanvas
           pins={visiblePins}
@@ -360,12 +361,12 @@ export default function TravPadHome() {
           />
         )}
 
-        {/* Bell — level with the search box */}
+        {/* Profile / sign-in — top-right corner */}
         <div className="absolute right-4 top-4 z-[500]">
           {authLoading ? (
             <div className="h-9 w-20 animate-pulse rounded-full bg-white/80 dark:bg-neutral-900/80" />
           ) : user ? (
-            <Notifications onOpenPin={setSelectedId} />
+            <ProfileMenu />
           ) : (
             <button
               type="button"
@@ -377,13 +378,6 @@ export default function TravPadHome() {
             </button>
           )}
         </div>
-
-        {/* Profile — level with the category filter */}
-        {user && (
-          <div className="absolute right-4 top-20 z-[500]">
-            <ProfileMenu />
-          </div>
-        )}
 
         <button
           type="button"
@@ -505,6 +499,7 @@ export default function TravPadHome() {
           onCancelRelocate={() => setRelocating(false)}
         />
       )}
-    </div>
+      </div>
+    </NotificationsProvider>
   );
 }
