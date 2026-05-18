@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "TravPad",
   description: "Wiki map for travelers",
+  appleWebApp: {
+    capable: true,
+    title: "TravPad",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({
