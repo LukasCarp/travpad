@@ -7,6 +7,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Layers, LogIn, MapPin, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { NewPin, Pin } from "@/lib/supabase";
+import { getOfflinePins } from "@/lib/offline/db";
 import AddPinFab from "./AddPinFab";
 import AddPinForm from "./AddPinForm";
 import CategoryFilter, { SECRET_FILTER } from "./CategoryFilter";
@@ -113,22 +114,47 @@ export default function TravPadHome() {
   const loadPins = useCallback(async () => {
     setLoading(true);
     setLoadError(null);
-    const { data, error } = await supabase
-      .from("pins_view")
-      .select(
-        "id, title, category, subcategory, short_description, description, services, secret, details, lat, lng, created_by, created_by_name, created_at, images"
-      );
-    if (error) {
-      setLoadError(error.message);
-      setPins([]);
-    } else {
+    try {
+      const { data, error } = await supabase
+        .from("pins_view")
+        .select(
+          "id, title, category, subcategory, short_description, description, services, secret, details, lat, lng, created_by, created_by_name, created_at, images"
+        );
+      if (error) throw new Error(error.message);
       setPins((data ?? []) as Pin[]);
+    } catch (err) {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        // Offline — fall back to the pins from downloaded offline packs.
+        const offline = await getOfflinePins();
+        setPins(offline);
+        setLoadError(
+          offline.length === 0
+            ? "You're offline and have no downloaded pins."
+            : null
+        );
+      } else {
+        setLoadError(
+          err instanceof Error ? err.message : "Couldn't load pins"
+        );
+        setPins([]);
+      }
     }
     setLoading(false);
   }, [supabase]);
 
   useEffect(() => {
     loadPins();
+  }, [loadPins]);
+
+  // Re-evaluate the pin source (network vs offline cache) on connectivity
+  // changes, so going offline/online switches over seamlessly.
+  useEffect(() => {
+    window.addEventListener("online", loadPins);
+    window.addEventListener("offline", loadPins);
+    return () => {
+      window.removeEventListener("online", loadPins);
+      window.removeEventListener("offline", loadPins);
+    };
   }, [loadPins]);
 
   const handleMapClick = useCallback(

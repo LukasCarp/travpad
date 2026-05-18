@@ -175,3 +175,26 @@ export function getActivePackId(): Promise<string | null> {
     return row?.value ?? null;
   });
 }
+
+// --- Offline pins ----------------------------------------------------------
+
+// The pins to show while offline: the active pack's pins, or — if no pack is
+// active — every downloaded pin merged together (deduplicated by id).
+export async function getOfflinePins(): Promise<Pin[]> {
+  const activeId = await getActivePackId();
+  const packIds = activeId
+    ? [activeId]
+    : (await listPacks()).map((p) => p.id);
+
+  const seen = new Set<string>();
+  const pins: Pin[] = [];
+  for (const id of packIds) {
+    for (const pin of await getPois(id)) {
+      if (!seen.has(pin.id)) {
+        seen.add(pin.id);
+        pins.push(pin);
+      }
+    }
+  }
+  return pins;
+}
