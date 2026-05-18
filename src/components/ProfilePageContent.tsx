@@ -319,7 +319,7 @@ export default function ProfilePageContent({
           className={
             "fixed z-[900] flex flex-col bg-white shadow-2xl outline-none ring-1 ring-black/5 dark:bg-neutral-900 dark:ring-white/10 " +
             (isMobile
-              ? "inset-x-0 bottom-0 max-h-[90vh] rounded-t-2xl"
+              ? "inset-x-0 bottom-0 h-[90vh] rounded-t-2xl"
               : "inset-y-0 right-0 w-full max-w-2xl")
           }
         >
