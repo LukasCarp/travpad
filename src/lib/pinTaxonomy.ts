@@ -4,6 +4,8 @@ import {
   Bed,
   BedDouble,
   Bike,
+  Building,
+  Building2,
   Bus,
   Cake,
   Camera,
@@ -13,15 +15,21 @@ import {
   Church,
   Coffee,
   CreditCard,
+  Flag,
   Gamepad2,
   Globe,
   GraduationCap,
   Grape,
   Hammer,
+  Home,
   Hotel,
   House,
   KeyRound,
+  Landmark,
   Laptop,
+  LayoutGrid,
+  Map as MapIcon,
+  MapPin,
   Martini,
   Mic,
   Mountain,
@@ -48,6 +56,20 @@ import {
 } from "lucide-react";
 
 export const TAXONOMY = [
+  {
+    name: "Area",
+    emoji: "🗺️",
+    subcategories: [
+      { name: "Region", chips: [] },
+      { name: "Province", chips: [] },
+      { name: "Municipality", chips: [] },
+      { name: "City", chips: [] },
+      { name: "Town", chips: [] },
+      { name: "Village", chips: [] },
+      { name: "District", chips: [] },
+      { name: "Neighborhood", chips: [] },
+    ],
+  },
   {
     name: "Eat/Drink",
     emoji: "🍽️",
@@ -522,6 +544,7 @@ export function labelForService(service: string): string {
 // A representative color and lucide icon for each main category, used for the
 // map markers, the category filter, and the category badge.
 const CATEGORY_COLOR: Record<string, string> = {
+  Area: "#64748b",
   "Eat/Drink": "#f97316",
   Sleep: "#6366f1",
   "See/Do": "#22c55e",
@@ -533,6 +556,7 @@ const CATEGORY_COLOR: Record<string, string> = {
 };
 
 const CATEGORY_ICON: Record<string, LucideIcon> = {
+  Area: MapIcon,
   "Eat/Drink": Utensils,
   Sleep: Bed,
   "See/Do": Camera,
@@ -554,6 +578,15 @@ export function iconForCategory(category: string): LucideIcon {
 // A lucide icon per subcategory. Subcategories reuse their parent category's
 // color; only the icon is specific.
 const SUBCATEGORY_ICON: Record<string, LucideIcon> = {
+  // Area
+  Region: MapIcon,
+  Province: Flag,
+  Municipality: Landmark,
+  City: Building2,
+  Town: Building,
+  Village: Home,
+  District: LayoutGrid,
+  Neighborhood: MapPin,
   // Eat/Drink
   Restaurant: UtensilsCrossed,
   "Café & Bakery": Coffee,
