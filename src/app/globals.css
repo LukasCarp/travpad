@@ -70,8 +70,3 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
-
-/* Push Leaflet's top-left controls below the TravPad logo overlay. */
-.leaflet-top.leaflet-left {
-  top: 4rem;
-}

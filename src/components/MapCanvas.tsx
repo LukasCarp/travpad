@@ -18,6 +18,21 @@ export type MapFocus = {
   zoom?: number;
 } | null;
 
+const BASEMAPS = {
+  osm: {
+    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  },
+  voyager: {
+    url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png",
+    attribution:
+      '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  },
+} as const;
+
+export type Basemap = keyof typeof BASEMAPS;
+
 function ClickHandler({
   onMapClick,
 }: {
@@ -49,12 +64,14 @@ function FocusController({
 
 export default function MapCanvas({
   pins,
+  basemap,
   onMapClick,
   onPinClick,
   focus,
   onFocusConsumed,
 }: {
   pins: Pin[];
+  basemap: Basemap;
   onMapClick: (lat: number, lng: number) => void;
   onPinClick: (pinId: string) => void;
   focus: MapFocus;
@@ -70,8 +87,9 @@ export default function MapCanvas({
       className="h-full w-full"
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        key={basemap}
+        attribution={BASEMAPS[basemap].attribution}
+        url={BASEMAPS[basemap].url}
       />
       <ClickHandler onMapClick={onMapClick} />
       <MarkerCluster pins={pins} onPinClick={onPinClick} />

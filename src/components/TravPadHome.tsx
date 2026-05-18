@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { LogIn, MapPin, Plus } from "lucide-react";
+import { Layers2, LogIn, MapPin, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { NewPin, Pin } from "@/lib/supabase";
 import AddPinFab from "./AddPinFab";
@@ -18,7 +18,7 @@ import ProfileMenu from "./ProfileMenu";
 import ProfilePageContent from "./ProfilePageContent";
 import SearchBox from "./SearchBox";
 import { useAuth } from "./AuthProvider";
-import type { MapFocus } from "./MapCanvas";
+import type { Basemap, MapFocus } from "./MapCanvas";
 
 const MapCanvas = dynamic(() => import("./MapCanvas"), {
   ssr: false,
@@ -68,6 +68,9 @@ export default function TravPadHome() {
 
   // Login modal over the map.
   const [loginOpen, setLoginOpen] = useState(false);
+
+  // Selected base map style.
+  const [basemap, setBasemap] = useState<Basemap>("osm");
 
   // Imperative map move (used by SearchBox map results).
   const [mapFocus, setMapFocus] = useState<MapFocus>(null);
@@ -332,6 +335,7 @@ export default function TravPadHome() {
       <main className="relative h-full w-full">
         <MapCanvas
           pins={visiblePins}
+          basemap={basemap}
           onMapClick={handleMapClick}
           onPinClick={setSelectedId}
           focus={mapFocus}
@@ -375,6 +379,18 @@ export default function TravPadHome() {
             </button>
           )}
         </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            setBasemap((b) => (b === "osm" ? "voyager" : "osm"))
+          }
+          aria-label="Switch map style"
+          title="Switch map style"
+          className="fixed bottom-20 left-4 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xl ring-1 ring-black/10 transition hover:bg-neutral-50 hover:text-rose-500 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+        >
+          <Layers2 className="h-5 w-5" />
+        </button>
 
         <div className="pointer-events-none fixed bottom-6 left-4 z-[400]">
           <div className="pointer-events-auto inline-flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm shadow-lg ring-1 ring-black/5 dark:bg-neutral-900/95 dark:ring-white/10">
