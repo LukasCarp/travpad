@@ -100,16 +100,21 @@ export default function TravPadHome() {
     return editPosition ?? { lat: editingPin.lat, lng: editingPin.lng };
   }, [editingPin, editPosition]);
 
+  // Keep the ?pin= query param in sync with the selected pin. selectedId is
+  // pure client state (the drawer is state-driven), so this is only for
+  // shareable URLs — use history.replaceState instead of router.replace to
+  // avoid an RSC navigation that a stale Service Worker could break.
   useEffect(() => {
-    const current = searchParams.get("pin");
-    if (selectedId === current) return;
-
-    const sp = new URLSearchParams(searchParams.toString());
+    const sp = new URLSearchParams(window.location.search);
+    if (sp.get("pin") === (selectedId ?? null)) return;
     if (selectedId) sp.set("pin", selectedId);
     else sp.delete("pin");
     const qs = sp.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-  }, [selectedId, searchParams, router, pathname]);
+    const url = qs
+      ? `${window.location.pathname}?${qs}`
+      : window.location.pathname;
+    window.history.replaceState(window.history.state, "", url);
+  }, [selectedId]);
 
   const loadPins = useCallback(async () => {
     setLoading(true);
