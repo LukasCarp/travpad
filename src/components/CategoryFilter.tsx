@@ -70,12 +70,7 @@ export default function CategoryFilter({ active, onChange }: Props) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Filter pins by category"
-        className={
-          "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium shadow-lg ring-1 ring-black/10 transition " +
-          (count > 0
-            ? "bg-rose-500 text-white hover:bg-rose-600"
-            : "bg-white/95 text-neutral-700 hover:bg-white dark:bg-neutral-900/95 dark:text-neutral-200")
-        }
+        className="inline-flex items-center gap-1.5 rounded-full bg-rose-500 px-3 py-1.5 text-sm font-medium text-white shadow-lg ring-1 ring-black/10 transition hover:bg-rose-600"
       >
         {count === 1 ? (
           <ItemIcon value={active[0]} />
