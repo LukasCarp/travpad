@@ -59,6 +59,18 @@ function isTileRequest(url) {
   return TILE_HOSTS.some((host) => url.hostname.endsWith(host));
 }
 
+// Tile servers use interchangeable subdomains (a/b/c); strip it so the key
+// matches what src/lib/offline/download.ts stored.
+function normalizeTileUrl(urlString) {
+  try {
+    const u = new URL(urlString);
+    u.hostname = u.hostname.replace(/^[a-d]\./, "");
+    return u.toString();
+  } catch {
+    return urlString;
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;
@@ -69,7 +81,7 @@ self.addEventListener("fetch", (event) => {
   if (isTileRequest(url)) {
     event.respondWith(
       fetch(request).catch(async () => {
-        const blob = await getTileBlob(request.url);
+        const blob = await getTileBlob(normalizeTileUrl(request.url));
         if (blob) {
           return new Response(blob, {
             headers: { "Content-Type": "image/png" },

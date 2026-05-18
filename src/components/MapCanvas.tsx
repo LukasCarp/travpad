@@ -9,6 +9,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Pin } from "@/lib/supabase";
+import DownloadButton from "./DownloadButton";
 import MarkerCluster from "./MarkerCluster";
 import UserLocation from "./UserLocation";
 
@@ -99,6 +100,7 @@ export default function MapCanvas({
       <ClickHandler onMapClick={onMapClick} />
       <MarkerCluster pins={pins} onPinClick={onPinClick} />
       <UserLocation />
+      <DownloadButton tileTemplate={BASEMAPS[basemap].url} />
       <FocusController focus={focus} onConsumed={onFocusConsumed} />
     </MapContainer>
   );
