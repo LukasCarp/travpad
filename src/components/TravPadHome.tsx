@@ -319,6 +319,17 @@ export default function TravPadHome() {
     setSelectedId(id);
   }, []);
 
+  const handleUserPick = useCallback(
+    (userId: string) => {
+      const sp = new URLSearchParams(searchParams.toString());
+      sp.set("profile", userId);
+      sp.delete("tab");
+      const qs = sp.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams]
+  );
+
   const clearMapFocus = useCallback(() => setMapFocus(null), []);
 
   const handleShowOnMap = useCallback(() => {
@@ -423,7 +434,11 @@ export default function TravPadHome() {
             <MapPin className="h-5 w-5 text-rose-500" />
             <span className="font-semibold tracking-tight">TravPad</span>
           </Link>
-          <SearchBox onMapPick={handleMapPick} onPinPick={handlePinPick} />
+          <SearchBox
+            onMapPick={handleMapPick}
+            onPinPick={handlePinPick}
+            onUserPick={handleUserPick}
+          />
         </div>
 
         {!selectedId && !profileViewId && (

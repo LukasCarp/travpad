@@ -8,9 +8,10 @@ import SearchBox from "./SearchBox";
 type Props = {
   onMapPick: (lat: number, lng: number, zoom?: number) => void;
   onPinPick: (pinId: string) => void;
+  onUserPick: (userId: string) => void;
 };
 
-export default function Navbar({ onMapPick, onPinPick }: Props) {
+export default function Navbar({ onMapPick, onPinPick, onUserPick }: Props) {
   const { user, loading } = useAuth();
 
   return (
@@ -21,7 +22,11 @@ export default function Navbar({ onMapPick, onPinPick }: Props) {
       </Link>
 
       <div className="flex flex-1 justify-center">
-        <SearchBox onMapPick={onMapPick} onPinPick={onPinPick} />
+        <SearchBox
+          onMapPick={onMapPick}
+          onPinPick={onPinPick}
+          onUserPick={onUserPick}
+        />
       </div>
 
       <div className="flex-none">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MapPin, Search, X } from "lucide-react";
+import { MapPin, Search, User as UserIcon, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type MapHit = {
@@ -20,12 +20,24 @@ type PinHit = {
   subcategory: string | null;
 };
 
+type UserHit = {
+  type: "user";
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+};
+
 type Props = {
   onMapPick: (lat: number, lng: number, zoom?: number) => void;
   onPinPick: (id: string) => void;
+  onUserPick: (id: string) => void;
 };
 
-export default function SearchBox({ onMapPick, onPinPick }: Props) {
+export default function SearchBox({
+  onMapPick,
+  onPinPick,
+  onUserPick,
+}: Props) {
   const supabase = useMemo(() => createClient(), []);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -34,6 +46,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
   const [open, setOpen] = useState(false);
   const [mapHits, setMapHits] = useState<MapHit[]>([]);
   const [pinHits, setPinHits] = useState<PinHit[]>([]);
+  const [userHits, setUserHits] = useState<UserHit[]>([]);
   const [busy, setBusy] = useState(false);
 
   const hasQuery = query.trim().length >= 2;
@@ -53,6 +66,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
     if (!hasQuery) {
       setMapHits([]);
       setPinHits([]);
+      setUserHits([]);
       setBusy(false);
       abortRef.current?.abort();
       return;
@@ -74,7 +88,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
       "https://nominatim.openstreetmap.org/search?format=json&limit=5&q=" +
       encodeURIComponent(q);
 
-    const [mapRes, pinRes] = await Promise.all([
+    const [mapRes, pinRes, userRes] = await Promise.all([
       fetch(nominatimUrl, {
         signal: ctrl.signal,
         headers: { "Accept-Language": "en" },
@@ -93,6 +107,11 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
             `category.ilike.%${q}%`,
           ].join(",")
         )
+        .limit(5),
+      supabase
+        .from("profiles")
+        .select("id, display_name, avatar_path")
+        .ilike("display_name", `%${q}%`)
         .limit(5),
     ]);
 
@@ -133,8 +152,25 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
       subcategory: p.subcategory,
     }));
 
+    const userList: UserHit[] = (
+      (userRes?.data ?? []) as Array<{
+        id: string;
+        display_name: string | null;
+        avatar_path: string | null;
+      }>
+    ).map((u) => ({
+      type: "user",
+      id: u.id,
+      name: u.display_name ?? "User",
+      avatarUrl: u.avatar_path
+        ? supabase.storage.from("avatars").getPublicUrl(u.avatar_path).data
+            .publicUrl
+        : null,
+    }));
+
     setMapHits(mapList);
     setPinHits(pinList);
+    setUserHits(userList);
     setBusy(false);
   }
 
@@ -150,9 +186,19 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
     setQuery("");
   }
 
+  function handleUserPickInner(hit: UserHit) {
+    onUserPick(hit.id);
+    setOpen(false);
+    setQuery("");
+  }
+
   const showDropdown = open && hasQuery;
   const noResults =
-    showDropdown && !busy && mapHits.length === 0 && pinHits.length === 0;
+    showDropdown &&
+    !busy &&
+    mapHits.length === 0 &&
+    pinHits.length === 0 &&
+    userHits.length === 0;
 
   return (
     <div className="relative w-full max-w-md" ref={containerRef}>
@@ -166,7 +212,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
-          placeholder="Search places or pins…"
+          placeholder="Search places, pins or people…"
           className="flex-1 bg-transparent outline-none"
         />
         {query.length > 0 && (
@@ -176,6 +222,7 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
               setQuery("");
               setMapHits([]);
               setPinHits([]);
+              setUserHits([]);
             }}
             aria-label="Clear"
             className="text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
@@ -187,8 +234,47 @@ export default function SearchBox({ onMapPick, onPinPick }: Props) {
 
       {showDropdown && (
         <div className="absolute left-0 right-0 top-full z-[600] mt-1 max-h-96 overflow-y-auto rounded-xl bg-white shadow-xl ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/10">
-          {pinHits.length > 0 && (
+          {userHits.length > 0 && (
             <div className="py-1">
+              <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+                People
+              </div>
+              {userHits.map((hit) => (
+                <button
+                  key={`user-${hit.id}`}
+                  type="button"
+                  onClick={() => handleUserPickInner(hit)}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                >
+                  <span className="flex h-7 w-7 flex-none items-center justify-center overflow-hidden rounded-full bg-neutral-100 text-neutral-500 dark:bg-neutral-800">
+                    {hit.avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={hit.avatarUrl}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <UserIcon className="h-3.5 w-3.5" />
+                    )}
+                  </span>
+                  <span className="block min-w-0 flex-1 truncate font-medium">
+                    {hit.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {pinHits.length > 0 && (
+            <div
+              className={
+                "py-1" +
+                (userHits.length > 0
+                  ? " border-t border-neutral-100 dark:border-neutral-800"
+                  : "")
+              }
+            >
               <div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
                 Pins
               </div>
