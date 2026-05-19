@@ -11,6 +11,23 @@ export default function ServiceWorkerRegister() {
       return;
     }
 
+    // In development the worker caches Turbopack chunks that change under the
+    // same URL, which serves stale JS and breaks hydration. Unregister it and
+    // drop its caches so dev always runs the fresh build.
+    if (process.env.NODE_ENV !== "production") {
+      navigator.serviceWorker
+        .getRegistrations()
+        .then((regs) => regs.forEach((r) => r.unregister()))
+        .catch(() => {});
+      if (typeof caches !== "undefined") {
+        caches
+          .keys()
+          .then((keys) => keys.forEach((k) => caches.delete(k)))
+          .catch(() => {});
+      }
+      return;
+    }
+
     const hadController = !!navigator.serviceWorker.controller;
     let reloaded = false;
 
