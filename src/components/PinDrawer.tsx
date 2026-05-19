@@ -7,6 +7,7 @@ import {
   BellRing,
   ChevronLeft,
   ChevronRight,
+  ImageUp,
   MapPin,
   Pencil,
   Share2,
@@ -203,6 +204,14 @@ export default function PinDrawer({
 
           {pin && (
             <div className="flex-1 overflow-y-auto">
+              {images.length === 0 && (
+                <div className="flex aspect-[4/3] w-full items-center justify-center bg-neutral-100 dark:bg-neutral-800">
+                  <ImageUp
+                    className="h-24 w-24 text-neutral-400 dark:text-neutral-500"
+                    aria-hidden="true"
+                  />
+                </div>
+              )}
               {images.length > 0 && (
                 <div className="relative bg-neutral-100 dark:bg-neutral-800">
                   <div className="aspect-[4/3] w-full">

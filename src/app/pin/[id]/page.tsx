@@ -149,7 +149,7 @@ export default async function PinPage({
       ) : (
         <div className="mt-4 flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
           <ImageUp
-            className="h-24 w-24 text-neutral-300 dark:text-neutral-600"
+            className="h-24 w-24 text-neutral-400 dark:text-neutral-500"
             aria-hidden="true"
           />
         </div>
