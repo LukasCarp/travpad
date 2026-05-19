@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   LogOut,
+  MessageCircle,
   Pencil,
   Star,
   UserCheck,
@@ -17,18 +18,27 @@ import { createClient } from "@/lib/supabase/client";
 import type { List, Pin, Profile, Review } from "@/lib/supabase";
 import { listPacks } from "@/lib/offline/db";
 import { useAuth } from "./AuthProvider";
+import MessagesInbox from "./MessagesInbox";
 import Notifications from "./Notifications";
 import OfflinePacks from "./OfflinePacks";
 import ProfileEditModal from "./ProfileEditModal";
 
-type Tab = "offline" | "pins" | "reviews" | "follows" | "lists";
+type Tab = "offline" | "messages" | "pins" | "reviews" | "follows" | "lists";
 
-const VALID_TABS: Tab[] = ["offline", "pins", "reviews", "follows", "lists"];
+const VALID_TABS: Tab[] = [
+  "offline",
+  "messages",
+  "pins",
+  "reviews",
+  "follows",
+  "lists",
+];
 
-// The Offline maps tab is device-local, so it's only valid on your own profile.
+// The Offline maps and Messages tabs are personal, so they're only valid on
+// your own profile.
 function parseTab(raw: string | null, isOwn: boolean): Tab {
   const tab = VALID_TABS.includes(raw as Tab) ? (raw as Tab) : "pins";
-  return tab === "offline" && !isOwn ? "pins" : tab;
+  return (tab === "offline" || tab === "messages") && !isOwn ? "pins" : tab;
 }
 
 type FollowProfile = Pick<Profile, "id" | "display_name" | "avatar_path">;
@@ -125,6 +135,7 @@ export default function ProfilePageContent({
   const [error, setError] = useState<string | null>(null);
   const [followBusy, setFollowBusy] = useState(false);
   const [offlineCount, setOfflineCount] = useState(0);
+  const [messagesUnread, setMessagesUnread] = useState(0);
 
   // Push tab changes back to the URL so /?profile=<id>&tab=reviews can be
   // shared and bookmarked directly. Skip if we're already in sync.
@@ -300,6 +311,29 @@ export default function ProfilePageContent({
       .catch(() => {});
   }, [isOwn]);
 
+  // Unread message count for the Messages tab label.
+  useEffect(() => {
+    if (!isOwn || !user) return;
+    supabase
+      .from("messages")
+      .select("id", { count: "exact", head: true })
+      .eq("recipient_id", user.id)
+      .is("read_at", null)
+      .then(({ count }) => setMessagesUnread(count ?? 0));
+  }, [isOwn, user, supabase]);
+
+  // Open a direct-message conversation, replacing the profile view.
+  const openConversation = useCallback(
+    (userId: string) => {
+      const sp = new URLSearchParams(searchParams.toString());
+      sp.delete("profile");
+      sp.delete("tab");
+      sp.set("dm", userId);
+      router.replace(`?${sp.toString()}`, { scroll: false });
+    },
+    [router, searchParams]
+  );
+
   const direction = isMobile ? "bottom" : "right";
   const avatar = profile ? avatarUrl(supabase, profile.avatar_path) : null;
 
@@ -419,6 +453,14 @@ export default function ProfilePageContent({
                           </>
                         )}
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => openConversation(profileId)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 shadow hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        Message
+                      </button>
                     </div>
                   )}
                 </section>
@@ -457,6 +499,12 @@ export default function ProfilePageContent({
                           ...(isOwn
                             ? ([
                                 ["offline", `Offline maps (${offlineCount})`],
+                                [
+                                  "messages",
+                                  messagesUnread > 0
+                                    ? `Messages (${messagesUnread})`
+                                    : "Messages",
+                                ],
                               ] as [Tab, string][])
                             : []),
                           ["pins", `Pins (${pins.length})`],
@@ -485,6 +533,12 @@ export default function ProfilePageContent({
                   <div className="pt-4">
                     {activeTab === "offline" && isOwn && (
                       <OfflinePacks onCountChange={setOfflineCount} />
+                    )}
+                    {activeTab === "messages" && isOwn && (
+                      <MessagesInbox
+                        onOpenConversation={openConversation}
+                        onCountChange={setMessagesUnread}
+                      />
                     )}
                     {activeTab === "pins" && (
                       <PinsTab pins={pins} onOpenPin={onOpenPin} />

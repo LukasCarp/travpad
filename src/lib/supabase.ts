@@ -60,3 +60,12 @@ export type List = {
   name: string;
   created_at: string;
 };
+
+export type DirectMessage = {
+  id: string;
+  sender_id: string;
+  recipient_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+};

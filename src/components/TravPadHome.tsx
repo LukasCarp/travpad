@@ -13,6 +13,7 @@ import AddPinForm from "./AddPinForm";
 import CategoryFilter, { SECRET_FILTER } from "./CategoryFilter";
 import ListDrawer from "./ListDrawer";
 import LoginModal from "./LoginModal";
+import MessageDrawer from "./MessageDrawer";
 import { NotificationsProvider } from "./NotificationsProvider";
 import PinDrawer from "./PinDrawer";
 import ProfileMenu from "./ProfileMenu";
@@ -346,6 +347,14 @@ export default function TravPadHome() {
 
   const profileViewId = searchParams.get("profile");
   const listViewId = searchParams.get("list");
+  const dmViewId = searchParams.get("dm");
+
+  const closeDm = useCallback(() => {
+    const sp = new URLSearchParams(searchParams.toString());
+    sp.delete("dm");
+    const qs = sp.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
 
   const closeProfile = useCallback(() => {
     const sp = new URLSearchParams(searchParams.toString());
@@ -535,6 +544,14 @@ export default function TravPadHome() {
           listId={listViewId}
           onClose={closeList}
           onOpenPin={openPinFromList}
+        />
+      )}
+
+      {dmViewId && user && (
+        <MessageDrawer
+          key={dmViewId}
+          otherUserId={dmViewId}
+          onClose={closeDm}
         />
       )}
 
