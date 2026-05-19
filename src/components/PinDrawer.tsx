@@ -126,7 +126,7 @@ export default function PinDrawer({
 
   async function handleShare() {
     if (!pin) return;
-    const url = `${window.location.origin}/?pin=${pin.id}`;
+    const url = `${window.location.origin}/pin/${pin.id}`;
     if (navigator.share) {
       try {
         await navigator.share({ title: pin.title, url });

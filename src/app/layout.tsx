@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { siteUrl } from "@/lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,6 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  // Base for resolving relative Open Graph / canonical URLs into absolute ones.
+  metadataBase: new URL(siteUrl()),
   title: "TravPad",
   description: "Wiki map for travelers",
   appleWebApp: {
