@@ -57,6 +57,22 @@ export default function AddPinForm({
   const [description, setDescription] = useState(
     initialValues?.description ?? ""
   );
+
+  // Contact info, stored in the pin's `details` jsonb.
+  const initialDetails = (initialValues?.details ?? {}) as Record<
+    string,
+    unknown
+  >;
+  const [website, setWebsite] = useState(
+    typeof initialDetails.website === "string" ? initialDetails.website : ""
+  );
+  const [phone, setPhone] = useState(
+    typeof initialDetails.phone === "string" ? initialDetails.phone : ""
+  );
+  const [email, setEmail] = useState(
+    typeof initialDetails.email === "string" ? initialDetails.email : ""
+  );
+
   const [services, setServices] = useState<string[]>(
     initialValues?.services ?? []
   );
@@ -115,6 +131,11 @@ export default function AddPinForm({
       return;
     }
 
+    const details: Record<string, string> = {};
+    if (website.trim()) details.website = website.trim();
+    if (phone.trim()) details.phone = phone.trim();
+    if (email.trim()) details.email = email.trim();
+
     setSaving(true);
     try {
       await onSubmit({
@@ -127,7 +148,7 @@ export default function AddPinForm({
         secret,
         lat: position.lat,
         lng: position.lng,
-        details: {},
+        details,
         imageStoragePaths: imagePaths,
       });
     } catch (err) {
@@ -279,6 +300,46 @@ export default function AddPinForm({
                 className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
                 placeholder="More details — shown behind the Read more button."
               />
+            </div>
+
+            <div className="space-y-3 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800">
+              <p className="text-sm font-medium">Contact</p>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-neutral-500">
+                  Website
+                </label>
+                <input
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
+                  placeholder="example.com"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-neutral-500">
+                  Phone
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
+                  placeholder="+34 600 000 000"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-neutral-500">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full rounded-lg border border-neutral-300 bg-transparent px-3 py-2 text-sm outline-none focus:border-rose-500 dark:border-neutral-700"
+                  placeholder="hello@example.com"
+                />
+              </div>
             </div>
 
             <div>

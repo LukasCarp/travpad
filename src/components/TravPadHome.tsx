@@ -256,6 +256,7 @@ export default function TravPadHome() {
         p_services: pin.services,
         p_image_paths: pin.imageStoragePaths,
         p_secret: pin.secret,
+        p_details: pin.details,
       });
       if (error) throw new Error(error.message);
 

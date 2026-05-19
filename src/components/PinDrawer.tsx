@@ -25,6 +25,7 @@ import {
 import { useAuth } from "./AuthProvider";
 import AddToList from "./AddToList";
 import OfflineImage from "./OfflineImage";
+import PinContact from "./PinContact";
 import PinReviews from "./PinReviews";
 
 function useMediaQuery(query: string): boolean {
@@ -367,6 +368,8 @@ export default function PinDrawer({
                     {pin.description}
                   </p>
                 )}
+
+                <PinContact details={pin.details} />
 
                 {pin.services && pin.services.length > 0 && (
                   <div className="border-t border-neutral-200 pt-4 dark:border-neutral-800">

@@ -6,6 +6,7 @@ import { ImageUp, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { colorForCategory, labelForService } from "@/lib/pinTaxonomy";
 import { siteUrl } from "@/lib/site";
+import PinContact from "@/components/PinContact";
 import type { Pin } from "@/lib/supabase";
 
 // Server-rendered pin profile page.
@@ -24,6 +25,7 @@ type PinRow = Pick<
   | "short_description"
   | "description"
   | "services"
+  | "details"
   | "lat"
   | "lng"
   | "created_by"
@@ -39,7 +41,7 @@ const getPin = cache(async (id: string): Promise<PinRow | null> => {
   const { data } = await supabase
     .from("pins_view")
     .select(
-      "id, title, category, subcategory, short_description, description, services, lat, lng, created_by, created_by_name, created_at, images"
+      "id, title, category, subcategory, short_description, description, services, details, lat, lng, created_by, created_by_name, created_at, images"
     )
     .eq("id", id)
     .maybeSingle();
@@ -210,6 +212,8 @@ export default async function PinPage({
           {pin.description}
         </p>
       )}
+
+      <PinContact details={pin.details} className="mt-4" />
 
       {pin.services && pin.services.length > 0 && (
         <div className="mt-6 border-t border-neutral-200 pt-4 dark:border-neutral-800">
