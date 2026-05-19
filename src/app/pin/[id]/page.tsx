@@ -2,7 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin } from "lucide-react";
+import { ImageUp, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { colorForCategory, labelForService } from "@/lib/pinTaxonomy";
 import { siteUrl } from "@/lib/site";
@@ -137,13 +137,20 @@ export default async function PinPage({
         ← TravPad
       </Link>
 
-      {images.length > 0 && (
+      {images.length > 0 ? (
         <div className="mt-4 overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-800">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={images[0]}
             alt={pin.title}
             className="aspect-[4/3] w-full object-cover"
+          />
+        </div>
+      ) : (
+        <div className="mt-4 flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+          <ImageUp
+            className="h-24 w-24 text-neutral-300 dark:text-neutral-600"
+            aria-hidden="true"
           />
         </div>
       )}
