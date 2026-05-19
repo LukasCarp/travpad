@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -68,6 +68,47 @@ function FocusController({
   return null;
 }
 
+const VIEW_KEY = "travpad:mapView";
+
+type SavedView = { lat: number; lng: number; zoom: number };
+
+// The last map view, so a reload reopens where the user left off.
+function loadSavedView(): SavedView | null {
+  try {
+    const v = JSON.parse(localStorage.getItem(VIEW_KEY) ?? "null");
+    if (
+      v &&
+      typeof v.lat === "number" &&
+      typeof v.lng === "number" &&
+      typeof v.zoom === "number"
+    ) {
+      return v;
+    }
+  } catch {
+    // unreadable storage — fall back to the default view
+  }
+  return null;
+}
+
+function ViewPersistence() {
+  const map = useMap();
+  // moveend covers both panning and zooming.
+  useMapEvents({
+    moveend() {
+      const c = map.getCenter();
+      try {
+        localStorage.setItem(
+          VIEW_KEY,
+          JSON.stringify({ lat: c.lat, lng: c.lng, zoom: map.getZoom() })
+        );
+      } catch {
+        // ignore storage write failures
+      }
+    },
+  });
+  return null;
+}
+
 export default function MapCanvas({
   pins,
   basemap,
@@ -83,10 +124,12 @@ export default function MapCanvas({
   focus: MapFocus;
   onFocusConsumed: () => void;
 }) {
+  const [savedView] = useState(loadSavedView);
+
   return (
     <MapContainer
-      center={[20, 0]}
-      zoom={2}
+      center={savedView ? [savedView.lat, savedView.lng] : [20, 0]}
+      zoom={savedView ? savedView.zoom : 2}
       minZoom={2}
       worldCopyJump
       zoomControl={false}
@@ -102,6 +145,7 @@ export default function MapCanvas({
       <UserLocation />
       <DownloadButton tileTemplate={BASEMAPS[basemap].url} />
       <FocusController focus={focus} onConsumed={onFocusConsumed} />
+      <ViewPersistence />
     </MapContainer>
   );
 }

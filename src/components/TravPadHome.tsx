@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -66,6 +66,7 @@ export default function TravPadHome() {
 
   // Map filter: selected category names and/or SECRET_FILTER. Empty = show all.
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
+  const categoryFilterLoaded = useRef(false);
 
   // Login modal over the map.
   const [loginOpen, setLoginOpen] = useState(false);
@@ -161,6 +162,37 @@ export default function TravPadHome() {
       window.removeEventListener("offline", loadPins);
     };
   }, [loadPins]);
+
+  // Restore the category filter from localStorage on mount (done in an effect
+  // — not the initial state — so it can't cause an SSR hydration mismatch).
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("travpad:categoryFilter");
+      const parsed = raw ? JSON.parse(raw) : null;
+      if (Array.isArray(parsed)) {
+        setCategoryFilter(parsed.filter((v) => typeof v === "string"));
+      }
+    } catch {
+      // ignore unreadable storage
+    }
+  }, []);
+
+  // Persist the category filter so a reload remembers it. The first run is
+  // skipped so it can't overwrite stored state before the restore above.
+  useEffect(() => {
+    if (!categoryFilterLoaded.current) {
+      categoryFilterLoaded.current = true;
+      return;
+    }
+    try {
+      localStorage.setItem(
+        "travpad:categoryFilter",
+        JSON.stringify(categoryFilter)
+      );
+    } catch {
+      // ignore storage write failures
+    }
+  }, [categoryFilter]);
 
   const handleMapClick = useCallback(
     (lat: number, lng: number) => {
