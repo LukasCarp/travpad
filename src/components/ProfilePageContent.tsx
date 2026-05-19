@@ -17,6 +17,7 @@ import { Drawer } from "vaul";
 import { createClient } from "@/lib/supabase/client";
 import type { List, Pin, Profile, Review } from "@/lib/supabase";
 import { listPacks } from "@/lib/offline/db";
+import { avatarUrl } from "@/lib/avatar";
 import { useAuth } from "./AuthProvider";
 import MessagesInbox from "./MessagesInbox";
 import Notifications from "./Notifications";
@@ -54,14 +55,6 @@ function useMediaQuery(query: string): boolean {
     return () => m.removeEventListener("change", handler);
   }, [query]);
   return matches;
-}
-
-function avatarUrl(
-  supabase: ReturnType<typeof createClient>,
-  path: string | null
-): string | null {
-  if (!path) return null;
-  return supabase.storage.from("avatars").getPublicUrl(path).data.publicUrl;
 }
 
 function StarRow({ value }: { value: number }) {

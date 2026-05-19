@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { MapPin, Search, User as UserIcon, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { avatarUrl } from "@/lib/avatar";
 
 type MapHit = {
   type: "map";
@@ -162,10 +163,7 @@ export default function SearchBox({
       type: "user",
       id: u.id,
       name: u.display_name ?? "User",
-      avatarUrl: u.avatar_path
-        ? supabase.storage.from("avatars").getPublicUrl(u.avatar_path).data
-            .publicUrl
-        : null,
+      avatarUrl: avatarUrl(supabase, u.avatar_path),
     }));
 
     setMapHits(mapList);

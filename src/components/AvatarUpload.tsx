@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { ImagePlus, Loader, User as UserIcon, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { avatarUrl } from "@/lib/avatar";
 
 type Props = {
   currentPath: string | null;
@@ -14,9 +15,7 @@ export default function AvatarUpload({ currentPath, onChange }: Props) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const previewUrl = currentPath
-    ? supabase.storage.from("avatars").getPublicUrl(currentPath).data.publicUrl
-    : null;
+  const previewUrl = avatarUrl(supabase, currentPath);
 
   async function handleFile(file: File) {
     setError(null);

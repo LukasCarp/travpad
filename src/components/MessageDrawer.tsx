@@ -5,6 +5,7 @@ import { Send, User as UserIcon, X } from "lucide-react";
 import { Drawer } from "vaul";
 import { createClient } from "@/lib/supabase/client";
 import type { DirectMessage } from "@/lib/supabase";
+import { avatarUrl } from "@/lib/avatar";
 import { useAuth } from "./AuthProvider";
 
 function useMediaQuery(query: string): boolean {
@@ -74,12 +75,8 @@ export default function MessageDrawer({ otherUserId, onClose }: Props) {
         .maybeSingle();
       if (alive && prof) {
         setOtherName((prof.display_name as string) ?? "User");
-        const path = prof.avatar_path as string | null;
         setOtherAvatar(
-          path
-            ? supabase.storage.from("avatars").getPublicUrl(path).data
-                .publicUrl
-            : null
+          avatarUrl(supabase, prof.avatar_path as string | null)
         );
       }
       await loadMessages();

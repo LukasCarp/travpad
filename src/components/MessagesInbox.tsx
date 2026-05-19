@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { User as UserIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { DirectMessage } from "@/lib/supabase";
+import { avatarUrl } from "@/lib/avatar";
 import { useAuth } from "./AuthProvider";
 
 type Conversation = {
@@ -72,10 +73,7 @@ export default function MessagesInbox({
           | { display_name: string; avatar_path: string | null }
           | undefined;
         c.name = p?.display_name ?? "Unknown user";
-        c.avatarUrl = p?.avatar_path
-          ? supabase.storage.from("avatars").getPublicUrl(p.avatar_path).data
-              .publicUrl
-          : null;
+        c.avatarUrl = avatarUrl(supabase, p?.avatar_path);
       }
     }
 

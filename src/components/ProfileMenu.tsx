@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { User as UserIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { avatarUrl } from "@/lib/avatar";
 import { useAuth } from "./AuthProvider";
 import { useNotifications } from "./NotificationsProvider";
 
@@ -47,9 +48,7 @@ export default function ProfileMenu() {
 
   if (!user) return null;
 
-  const profileUrl = avatarPath
-    ? supabase.storage.from("avatars").getPublicUrl(avatarPath).data.publicUrl
-    : null;
+  const profileUrl = avatarUrl(supabase, avatarPath);
   const fallback = oauthAvatar(user);
   const url = profileUrl ?? fallback;
 
