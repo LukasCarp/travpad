@@ -131,10 +131,15 @@ export default function AddPinForm({
       return;
     }
 
-    const details: Record<string, string> = {};
+    // Preserve any extra keys already on the pin (e.g. osm_id from OSM
+    // imports) and just override the editable contact fields.
+    const details: Record<string, unknown> = { ...initialDetails };
     if (website.trim()) details.website = website.trim();
+    else delete details.website;
     if (phone.trim()) details.phone = phone.trim();
+    else delete details.phone;
     if (email.trim()) details.email = email.trim();
+    else delete details.email;
 
     setSaving(true);
     try {

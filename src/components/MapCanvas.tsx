@@ -9,8 +9,10 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Pin } from "@/lib/supabase";
+import type { OsmBounds } from "@/lib/osmImport";
 import DownloadButton from "./DownloadButton";
 import MarkerCluster from "./MarkerCluster";
+import OsmImportButton from "./OsmImportButton";
 import UserLocation from "./UserLocation";
 
 export type MapFocus = {
@@ -116,6 +118,7 @@ export default function MapCanvas({
   onPinClick,
   focus,
   onFocusConsumed,
+  onRequestOsmImport,
 }: {
   pins: Pin[];
   basemap: Basemap;
@@ -123,6 +126,7 @@ export default function MapCanvas({
   onPinClick: (pinId: string) => void;
   focus: MapFocus;
   onFocusConsumed: () => void;
+  onRequestOsmImport: (bounds: OsmBounds) => void;
 }) {
   const [savedView] = useState(loadSavedView);
 
@@ -146,6 +150,7 @@ export default function MapCanvas({
       <DownloadButton tileTemplate={BASEMAPS[basemap].url} />
       <FocusController focus={focus} onConsumed={onFocusConsumed} />
       <ViewPersistence />
+      <OsmImportButton onRequest={onRequestOsmImport} />
     </MapContainer>
   );
 }

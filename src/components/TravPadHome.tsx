@@ -14,6 +14,8 @@ import CategoryFilter, { SECRET_FILTER } from "./CategoryFilter";
 import ListDrawer from "./ListDrawer";
 import LoginModal from "./LoginModal";
 import MessageDrawer from "./MessageDrawer";
+import OsmImportDrawer from "./OsmImportDrawer";
+import type { OsmBounds } from "@/lib/osmImport";
 import { NotificationsProvider } from "./NotificationsProvider";
 import PinDrawer from "./PinDrawer";
 import ProfileMenu from "./ProfileMenu";
@@ -77,6 +79,11 @@ export default function TravPadHome() {
 
   // Imperative map move (used by SearchBox map results).
   const [mapFocus, setMapFocus] = useState<MapFocus>(null);
+
+  // OSM import (test feature — see src/lib/osmImport.ts).
+  const [osmImportBounds, setOsmImportBounds] = useState<OsmBounds | null>(
+    null
+  );
 
   const selectedPin = useMemo(
     () => (selectedId ? pins.find((p) => p.id === selectedId) ?? null : null),
@@ -425,6 +432,7 @@ export default function TravPadHome() {
           onPinClick={setSelectedId}
           focus={mapFocus}
           onFocusConsumed={clearMapFocus}
+          onRequestOsmImport={setOsmImportBounds}
         />
 
         <div className="absolute left-4 top-4 z-[500] flex items-center gap-3">
@@ -568,6 +576,14 @@ export default function TravPadHome() {
           key={dmViewId}
           otherUserId={dmViewId}
           onClose={closeDm}
+        />
+      )}
+
+      {osmImportBounds && (
+        <OsmImportDrawer
+          bounds={osmImportBounds}
+          onClose={() => setOsmImportBounds(null)}
+          onImported={loadPins}
         />
       )}
 
