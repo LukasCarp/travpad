@@ -34,7 +34,13 @@ export type CandidatePin = {
   rawTags: Record<string, string>;
 };
 
-const OVERPASS_URL = "https://overpass-api.de/api/interpreter";
+// Public Overpass mirrors — if one is overloaded or unreachable (common on
+// mobile networks) we fall through to the next.
+const OVERPASS_MIRRORS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+  "https://overpass.openstreetmap.fr/api/interpreter",
+];
 
 // Tag filters chosen so the result maps cleanly to TravPad's taxonomy.
 const NODE_FILTERS = [
@@ -56,24 +62,47 @@ export async function fetchOsmPois(
   // `out body` returns tags AND geometry (lat/lon for nodes). `out tags`
   // alone strips coordinates and the result becomes unusable for pins.
   const query = `[out:json][timeout:60];\n(\n${filters}\n);\nout body 200;`;
-  const url = `${OVERPASS_URL}?data=${encodeURIComponent(query)}`;
 
   console.log(
     "[osmImport] querying bbox:",
     `S=${south.toFixed(4)} W=${west.toFixed(4)} N=${north.toFixed(4)} E=${east.toFixed(4)}`
   );
 
-  // Public Overpass servers return 504 / 429 when overloaded; one retry
-  // after a short delay clears most transient failures.
-  let res = await fetch(url);
-  if (!res.ok && (res.status === 504 || res.status === 429 || res.status >= 500)) {
-    console.warn(
-      `[osmImport] Overpass ${res.status} on first try, retrying in 2s…`
-    );
-    await new Promise((r) => setTimeout(r, 2000));
-    res = await fetch(url);
+  // Try each mirror in order; a flaky mobile connection or an overloaded
+  // mirror will trigger "Failed to fetch" — fall through to the next.
+  let res: Response | null = null;
+  let lastError: unknown = null;
+  for (const mirror of OVERPASS_MIRRORS) {
+    const url = `${mirror}?data=${encodeURIComponent(query)}`;
+    try {
+      const r = await fetch(url);
+      if (r.ok) {
+        res = r;
+        break;
+      }
+      if (r.status === 504 || r.status === 429 || r.status >= 500) {
+        console.warn(
+          `[osmImport] ${new URL(mirror).hostname} returned ${r.status}, trying next mirror`
+        );
+        lastError = new Error(`${r.status} from ${new URL(mirror).hostname}`);
+        continue;
+      }
+      throw new Error(`Overpass returned ${r.status}`);
+    } catch (err) {
+      console.warn(
+        `[osmImport] ${new URL(mirror).hostname} fetch failed:`,
+        err
+      );
+      lastError = err;
+    }
   }
-  if (!res.ok) throw new Error(`Overpass returned ${res.status}`);
+  if (!res) {
+    throw new Error(
+      `Couldn't reach any Overpass mirror — ${
+        lastError instanceof Error ? lastError.message : "network error"
+      }`
+    );
+  }
   const data = (await res.json()) as {
     elements?: OsmElement[];
     remark?: string;
