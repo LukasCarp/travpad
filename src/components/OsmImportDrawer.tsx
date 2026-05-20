@@ -14,7 +14,7 @@ import {
   bboxAreaDeg2,
   fetchOsmPois,
   fetchWikiSummary,
-  findImportedOsmIds,
+  findUserPinKeys,
   translateToEnglish,
   uploadImageFromUrl,
   type CandidatePin,
@@ -67,12 +67,27 @@ export default function OsmImportDrawer({
         const list = await fetchOsmPois(bounds);
         if (!alive) return;
 
-        // Drop anything you've already imported (matched on the `osm_id`
-        // stored on the pin's `details`).
-        const imported = user
-          ? await findImportedOsmIds(supabase, user.id)
-          : new Set<string>();
-        const fresh = list.filter((p) => !imported.has(p.osmId));
+        // Drop anything you've already pinned. Match on `osm_id` (modern
+        // imports) and also on title + nearby coordinate (legacy pins
+        // without osm_id, ~50 m tolerance ≈ 0.0005°).
+        const keys = user
+          ? await findUserPinKeys(supabase, user.id)
+          : { osmIds: new Set<string>(), coordsByTitle: new Map() };
+        const fresh = list.filter((p) => {
+          if (keys.osmIds.has(p.osmId)) return false;
+          const sameTitle = keys.coordsByTitle.get(p.title);
+          if (sameTitle) {
+            for (const c of sameTitle) {
+              if (
+                Math.abs(c.lat - p.lat) < 0.0005 &&
+                Math.abs(c.lng - p.lng) < 0.0005
+              ) {
+                return false;
+              }
+            }
+          }
+          return true;
+        });
         setSkippedAlreadyImported(list.length - fresh.length);
 
         // Enrich each candidate with Wikipedia + thumbnail. Only keep the

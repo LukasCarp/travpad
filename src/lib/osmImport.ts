@@ -423,26 +423,36 @@ export async function fetchWikiSummary(
   return null;
 }
 
-// Returns the set of OSM ids the *current user* has already imported, so
-// the drawer can hide them. Filtering on a jsonb path via .in() proved
-// unreliable in supabase-js (URL encoding mangles `->>`), so we instead
-// fetch the user's own pins and filter the `osm_id` key client-side.
-export async function findImportedOsmIds(
+// What the current user has already pinned, organised so the OSM drawer
+// can hide duplicates two ways: by `osm_id` (re-imports), or by matching
+// title + nearby coordinate (legacy pins that predate osm_id storage).
+export async function findUserPinKeys(
   supabase: ReturnType<typeof createClient>,
   userId: string
-): Promise<Set<string>> {
+): Promise<{
+  osmIds: Set<string>;
+  coordsByTitle: Map<string, { lat: number; lng: number }[]>;
+}> {
   const { data } = await supabase
     .from("pins")
-    .select("details")
+    .select("title, lat, lng, details")
     .eq("created_by", userId);
-  const imported = new Set<string>();
+  const osmIds = new Set<string>();
+  const coordsByTitle = new Map<string, { lat: number; lng: number }[]>();
   for (const row of (data ?? []) as {
+    title: string;
+    lat: number;
+    lng: number;
     details: Record<string, unknown> | null;
   }[]) {
     const id = row.details?.osm_id;
-    if (typeof id === "string") imported.add(id);
+    if (typeof id === "string") osmIds.add(id);
+    const arr = coordsByTitle.get(row.title);
+    const entry = { lat: row.lat, lng: row.lng };
+    if (arr) arr.push(entry);
+    else coordsByTitle.set(row.title, [entry]);
   }
-  return imported;
+  return { osmIds, coordsByTitle };
 }
 
 // Downloads a remote image (e.g. a Wikipedia thumbnail) and uploads it into
