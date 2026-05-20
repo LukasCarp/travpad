@@ -67,12 +67,11 @@ export default function OsmImportDrawer({
         const list = await fetchOsmPois(bounds);
         if (!alive) return;
 
-        // Drop anything that already exists as a TravPad pin (matched on
-        // the `osm_id` stored in `details`).
-        const imported = await findImportedOsmIds(
-          supabase,
-          list.map((p) => p.osmId)
-        );
+        // Drop anything you've already imported (matched on the `osm_id`
+        // stored on the pin's `details`).
+        const imported = user
+          ? await findImportedOsmIds(supabase, user.id)
+          : new Set<string>();
         const fresh = list.filter((p) => !imported.has(p.osmId));
         setSkippedAlreadyImported(list.length - fresh.length);
 
@@ -109,7 +108,7 @@ export default function OsmImportDrawer({
     return () => {
       alive = false;
     };
-  }, [bounds]);
+  }, [bounds, supabase, user]);
 
   function toggle(id: string) {
     setSelected((s) => {

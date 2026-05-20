@@ -423,18 +423,18 @@ export async function fetchWikiSummary(
   return null;
 }
 
-// Returns the set of OSM ids that already exist as TravPad pins, so the
-// drawer can hide them from the import list. Looks at the `osm_id` key on
-// each pin's `details` jsonb.
+// Returns the set of OSM ids the *current user* has already imported, so
+// the drawer can hide them. Filtering on a jsonb path via .in() proved
+// unreliable in supabase-js (URL encoding mangles `->>`), so we instead
+// fetch the user's own pins and filter the `osm_id` key client-side.
 export async function findImportedOsmIds(
   supabase: ReturnType<typeof createClient>,
-  osmIds: string[]
+  userId: string
 ): Promise<Set<string>> {
-  if (osmIds.length === 0) return new Set();
   const { data } = await supabase
-    .from("pins_view")
+    .from("pins")
     .select("details")
-    .in("details->>osm_id", osmIds);
+    .eq("created_by", userId);
   const imported = new Set<string>();
   for (const row of (data ?? []) as {
     details: Record<string, unknown> | null;
