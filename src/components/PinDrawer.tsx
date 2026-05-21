@@ -318,7 +318,7 @@ export default function PinDrawer({
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {user && (
+                  {user ? (
                     <button
                       type="button"
                       onClick={handleFollow}
@@ -337,6 +337,14 @@ export default function PinDrawer({
                       )}
                       {isFollowing ? "Following" : "Follow"}
                     </button>
+                  ) : (
+                    <Link
+                      href="/login"
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Link>
                   )}
                   <AddToList pinId={pin.id} />
                   <button
