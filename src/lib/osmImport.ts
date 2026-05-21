@@ -404,10 +404,16 @@ export async function findUserPinKeys(
   osmIds: Set<string>;
   coordsByTitle: Map<string, { lat: number; lng: number }[]>;
 }> {
-  const { data } = await supabase
-    .from("pins")
-    .select("title, lat, lng, details")
+  // `pins` (the raw table) has `location geography` rather than separate
+  // lat/lng columns — those are only on `pins_view`. Query the view so we
+  // can match by coordinates.
+  const { data, error } = await supabase
+    .from("pins_view")
+    .select("title, lat, lng, details, created_by")
     .eq("created_by", userId);
+  if (error) {
+    console.warn("[osmImport] findUserPinKeys query error:", error.message);
+  }
   const osmIds = new Set<string>();
   const coordsByTitle = new Map<string, { lat: number; lng: number }[]>();
   for (const row of (data ?? []) as {
@@ -423,6 +429,9 @@ export async function findUserPinKeys(
     if (arr) arr.push(entry);
     else coordsByTitle.set(row.title, [entry]);
   }
+  console.log(
+    `[osmImport] dedupe: ${osmIds.size} osm_id matches, ${coordsByTitle.size} unique titles for user`
+  );
   return { osmIds, coordsByTitle };
 }
 
