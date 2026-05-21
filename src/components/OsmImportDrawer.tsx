@@ -101,7 +101,8 @@ export default function OsmImportDrawer({
             const wd = p.rawTags?.wikidata;
             const wp = p.rawTags?.wikipedia;
             const s = await fetchWikiSummary(wd, wp);
-            if (!s?.extract || !s.thumbnailUrl) return null;
+            // Description is required; photo is optional.
+            if (!s?.extract) return null;
             const text =
               s.lang === "en"
                 ? s.extract
@@ -226,9 +227,9 @@ export default function OsmImportDrawer({
             <div>
               <h1 className="text-lg font-semibold">Import from OpenStreetMap</h1>
               <p className="mt-1 text-xs text-neutral-500">
-                Places in the visible area that have a Wikipedia article with
-                both a description and a photo. Uncheck anything you
-                don&apos;t want, then import.
+                Places in the visible area with a Wikipedia description.
+                A photo is included when the article has one. Uncheck
+                anything you don&apos;t want, then import.
               </p>
             </div>
             <button
