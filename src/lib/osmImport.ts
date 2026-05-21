@@ -34,13 +34,10 @@ export type CandidatePin = {
   rawTags: Record<string, string>;
 };
 
-// Public Overpass mirrors — if one is overloaded or unreachable (common on
-// mobile networks) we fall through to the next.
-const OVERPASS_MIRRORS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
-  "https://overpass.openstreetmap.fr/api/interpreter",
-];
+// All Overpass calls go through our /api/overpass server proxy. Mobile
+// Safari often refuses direct fetches to overpass-api.de / mirrors (CORS
+// preflight or TLS quirks); going through our own origin sidesteps that.
+const OVERPASS_PROXY = "/api/overpass";
 
 // Tag filters chosen so the result maps cleanly to TravPad's taxonomy.
 const NODE_FILTERS = [
@@ -68,40 +65,14 @@ export async function fetchOsmPois(
     `S=${south.toFixed(4)} W=${west.toFixed(4)} N=${north.toFixed(4)} E=${east.toFixed(4)}`
   );
 
-  // Try each mirror in order; a flaky mobile connection or an overloaded
-  // mirror will trigger "Failed to fetch" — fall through to the next.
-  let res: Response | null = null;
-  let lastError: unknown = null;
-  for (const mirror of OVERPASS_MIRRORS) {
-    const url = `${mirror}?data=${encodeURIComponent(query)}`;
-    try {
-      const r = await fetch(url);
-      if (r.ok) {
-        res = r;
-        break;
-      }
-      if (r.status === 504 || r.status === 429 || r.status >= 500) {
-        console.warn(
-          `[osmImport] ${new URL(mirror).hostname} returned ${r.status}, trying next mirror`
-        );
-        lastError = new Error(`${r.status} from ${new URL(mirror).hostname}`);
-        continue;
-      }
-      throw new Error(`Overpass returned ${r.status}`);
-    } catch (err) {
-      console.warn(
-        `[osmImport] ${new URL(mirror).hostname} fetch failed:`,
-        err
-      );
-      lastError = err;
-    }
-  }
-  if (!res) {
-    throw new Error(
-      `Couldn't reach any Overpass mirror — ${
-        lastError instanceof Error ? lastError.message : "network error"
-      }`
-    );
+  const res = await fetch(OVERPASS_PROXY, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Overpass proxy ${res.status}: ${text || "no body"}`);
   }
   const data = (await res.json()) as {
     elements?: OsmElement[];
