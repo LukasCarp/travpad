@@ -2,7 +2,7 @@ import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ImageUp, MapPin } from "lucide-react";
+import { ImageUp, MapPin, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { colorForCategory, labelForService } from "@/lib/pinTaxonomy";
 import { siteUrl } from "@/lib/site";
@@ -106,6 +106,14 @@ export default async function PinPage({
   const pin = await getPin(id);
 
   if (!pin) notFound();
+
+  // Check the viewer's session so the Edit button can deep-link signed-in
+  // users straight into the map drawer, and bounce signed-out viewers to
+  // the login page (an entry point for new sign-ups).
+  const supabase = await createClient();
+  const {
+    data: { user: viewer },
+  } = await supabase.auth.getUser();
 
   const images = imageUrls(pin.images);
   const description = pin.short_description ?? pin.description ?? "";
@@ -233,13 +241,20 @@ export default async function PinPage({
         </div>
       )}
 
-      <div className="mt-6 border-t border-neutral-200 pt-4 dark:border-neutral-800">
+      <div className="mt-6 flex flex-wrap gap-2 border-t border-neutral-200 pt-4 dark:border-neutral-800">
         <Link
           href={`/?pin=${pin.id}`}
           className="inline-flex items-center gap-1.5 rounded-lg bg-rose-500 px-4 py-2 text-sm font-medium text-white shadow hover:bg-rose-600"
         >
           <MapPin className="h-4 w-4" />
           Show on map
+        </Link>
+        <Link
+          href={viewer ? `/?pin=${pin.id}` : "/login"}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-700 shadow-sm hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
+        >
+          <Pencil className="h-4 w-4" />
+          Edit
         </Link>
       </div>
     </main>

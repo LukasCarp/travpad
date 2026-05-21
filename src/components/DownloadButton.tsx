@@ -15,6 +15,8 @@ export default function DownloadButton({ tileTemplate }: Props) {
   const map = useMap();
   const router = useRouter();
   const { user } = useAuth();
+  // The downloaded packs are listed on your profile and the "Done" button
+  // navigates there, so the button is only useful to signed-in users.
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -77,6 +79,8 @@ export default function DownloadButton({ tileTemplate }: Props) {
     progress && progress.total
       ? Math.round((progress.done / progress.total) * 100)
       : 0;
+
+  if (!user) return null;
 
   return (
     <>
