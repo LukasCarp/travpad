@@ -7,6 +7,7 @@
 import { useMap } from "react-leaflet";
 import { Sparkles } from "lucide-react";
 import type { OsmBounds } from "@/lib/osmImport";
+import { useAuth } from "./AuthProvider";
 
 export default function OsmImportButton({
   onRequest,
@@ -14,6 +15,8 @@ export default function OsmImportButton({
   onRequest: (bounds: OsmBounds) => void;
 }) {
   const map = useMap();
+  const { user } = useAuth();
+  if (!user) return null;
 
   function click() {
     const b = map.getBounds();

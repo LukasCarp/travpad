@@ -70,6 +70,9 @@ export default function OsmImportDrawer({
         // Drop anything you've already pinned. Match on `osm_id` (modern
         // imports) and also on title + nearby coordinate (legacy pins
         // without osm_id, ~50 m tolerance ≈ 0.0005°).
+        console.log(
+          `[osmImport] dedupe check — user=${user?.id ?? "(none)"}`
+        );
         const keys = user
           ? await findUserPinKeys(supabase, user.id)
           : { osmIds: new Set<string>(), coordsByTitle: new Map() };
