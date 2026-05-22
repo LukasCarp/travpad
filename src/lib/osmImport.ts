@@ -21,6 +21,11 @@ export type OsmBounds = {
 
 export type CandidatePin = {
   osmId: string;
+  // Wikidata Q-id when we know it (from the OSM `wikidata` tag or because
+  // the pin came in via the Wikidata SPARQL fallback). Used to dedupe
+  // between the two import sources.
+  wikidataId?: string;
+  source: "osm" | "wikidata";
   lat: number;
   lng: number;
   title: string;
@@ -31,6 +36,10 @@ export type CandidatePin = {
   services: string[];
   details: { website?: string; phone?: string; email?: string };
   imageUrl?: string;
+  // Captured during enrichment so we can stash it in the saved pin's
+  // `details` for the eventual per-pin attribution UI.
+  wikipediaTitle?: string;
+  wikipediaLang?: string;
   rawTags: Record<string, string>;
 };
 
@@ -137,6 +146,8 @@ function parseElement(el: OsmElement): CandidatePin | null {
 
   return {
     osmId: `${el.type}/${el.id}`,
+    wikidataId: typeof t.wikidata === "string" ? t.wikidata : undefined,
+    source: "osm",
     lat: el.lat,
     lng: el.lon,
     title,
@@ -197,33 +208,33 @@ function mapTags(t: Record<string, string>): CatPair | null {
 
   // See/Do
   if (t.amenity === "place_of_worship")
-    return { category: "See/Do", subcategory: "Temples & Religious Sites" };
+    return { category: "Sights", subcategory: "Temples & Religious Sites" };
   if (t.tourism === "museum" || t.tourism === "gallery")
-    return { category: "See/Do", subcategory: "Arts & Museums" };
+    return { category: "Sights", subcategory: "Arts & Museums" };
   if (t.tourism === "artwork")
-    return { category: "See/Do", subcategory: "Arts & Museums" };
+    return { category: "Sights", subcategory: "Arts & Museums" };
   if (t.tourism === "attraction")
-    return { category: "See/Do", subcategory: "History & Monuments" };
+    return { category: "Sights", subcategory: "History & Monuments" };
   if (t.tourism === "viewpoint")
-    return { category: "See/Do", subcategory: "Nature & Viewpoints" };
+    return { category: "Sights", subcategory: "Nature & Viewpoints" };
   if (t.historic)
-    return { category: "See/Do", subcategory: "History & Monuments" };
+    return { category: "Sights", subcategory: "History & Monuments" };
   if (t.natural === "beach")
-    return { category: "See/Do", subcategory: "Beaches & Coastal" };
+    return { category: "Sights", subcategory: "Beaches & Coastal" };
   if (
     t.natural === "peak" ||
     t.natural === "waterfall" ||
     t.natural === "cave_entrance"
   )
-    return { category: "See/Do", subcategory: "Nature & Viewpoints" };
+    return { category: "Sights", subcategory: "Nature & Viewpoints" };
   if (t.leisure === "park")
-    return { category: "See/Do", subcategory: "Nature & Viewpoints" };
+    return { category: "Sights", subcategory: "Nature & Viewpoints" };
   if (
     t.leisure === "swimming_pool" ||
     t.leisure === "stadium" ||
     t.leisure === "sports_centre"
   )
-    return { category: "See/Do", subcategory: "Adventure & Sports" };
+    return { category: "Activities", subcategory: "Adventure & Sports" };
 
   // Sleep
   if (t.tourism === "hotel")
@@ -323,6 +334,7 @@ export async function fetchWikiSummary(
 ): Promise<{
   extract: string;
   lang: string;
+  title: string;
   thumbnailUrl?: string;
 } | null> {
   let lang = "en";
@@ -387,7 +399,7 @@ export async function fetchWikiSummary(
       typeof d?.thumbnail?.source === "string"
         ? (d.thumbnail.source as string)
         : undefined;
-    if (extract) return { extract, lang, thumbnailUrl };
+    if (extract) return { extract, lang, title, thumbnailUrl };
   } catch {
     return null;
   }
@@ -402,6 +414,7 @@ export async function findUserPinKeys(
   userId: string
 ): Promise<{
   osmIds: Set<string>;
+  wikidataIds: Set<string>;
   coordsByTitle: Map<string, { lat: number; lng: number }[]>;
 }> {
   // `pins` (the raw table) has `location geography` rather than separate
@@ -415,6 +428,7 @@ export async function findUserPinKeys(
     console.warn("[osmImport] findUserPinKeys query error:", error.message);
   }
   const osmIds = new Set<string>();
+  const wikidataIds = new Set<string>();
   const coordsByTitle = new Map<string, { lat: number; lng: number }[]>();
   for (const row of (data ?? []) as {
     title: string;
@@ -424,15 +438,17 @@ export async function findUserPinKeys(
   }[]) {
     const id = row.details?.osm_id;
     if (typeof id === "string") osmIds.add(id);
+    const wd = row.details?.wikidata_id;
+    if (typeof wd === "string") wikidataIds.add(wd);
     const arr = coordsByTitle.get(row.title);
     const entry = { lat: row.lat, lng: row.lng };
     if (arr) arr.push(entry);
     else coordsByTitle.set(row.title, [entry]);
   }
   console.log(
-    `[osmImport] dedupe: ${osmIds.size} osm_id matches, ${coordsByTitle.size} unique titles for user`
+    `[osmImport] dedupe: ${osmIds.size} osm_id, ${wikidataIds.size} wikidata_id, ${coordsByTitle.size} unique titles for user`
   );
-  return { osmIds, coordsByTitle };
+  return { osmIds, wikidataIds, coordsByTitle };
 }
 
 // Downloads a remote image (e.g. a Wikipedia thumbnail) and uploads it into
@@ -523,4 +539,203 @@ export async function translateToEnglish(
     }
   }
   return translated.join(" ");
+}
+
+// Wikidata SPARQL fallback — fetches Q-entities inside the bbox that have
+// an English Wikipedia article. Catches places that OSM doesn't tag with
+// a wikidata id (statues, smaller monuments, etc.).
+export async function fetchWikidataPois(
+  bounds: OsmBounds
+): Promise<CandidatePin[]> {
+  const res = await fetch("/api/wikidata", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bbox: bounds }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Wikidata proxy ${res.status}: ${text || "no body"}`);
+  }
+  const data = (await res.json()) as {
+    results?: { bindings?: WikidataBinding[] };
+  };
+  const bindings = data.results?.bindings ?? [];
+  console.log(`[osmImport] wikidata returned ${bindings.length} bindings`);
+
+  // A single Q-entity can appear multiple times (one row per instance-of
+  // value). Keep the first row per Q-id.
+  const byQ = new Map<string, WikidataBinding>();
+  for (const row of bindings) {
+    const qid = qidFromUrl(row.item?.value);
+    if (!qid || byQ.has(qid)) continue;
+    byQ.set(qid, row);
+  }
+
+  const out: CandidatePin[] = [];
+  for (const [qid, row] of byQ) {
+    const title = row.itemLabel?.value;
+    const coord = parseWktPoint(row.coord?.value);
+    if (!title || !coord) continue;
+    const mapping = mapWikidataInstance(row.instanceLabel?.value ?? "");
+    if (!mapping) continue;
+    const imageFile = row.image?.value;
+    const imageUrl = imageFile
+      ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(
+          decodeURIComponent(imageFile.split("/").pop() ?? "")
+        )}?width=640`
+      : undefined;
+    out.push({
+      osmId: `wikidata/${qid}`,
+      wikidataId: qid,
+      source: "wikidata",
+      lat: coord.lat,
+      lng: coord.lng,
+      title,
+      category: mapping.category,
+      subcategory: mapping.subcategory,
+      short_description: null,
+      description: null,
+      services: [],
+      details: {},
+      imageUrl,
+      rawTags: { wikidata: qid },
+    });
+  }
+  return out;
+}
+
+type WikidataBinding = {
+  item?: { value: string };
+  itemLabel?: { value: string };
+  coord?: { value: string };
+  image?: { value: string };
+  instanceLabel?: { value: string };
+};
+
+function qidFromUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/(Q\d+)$/);
+  return m ? m[1] : null;
+}
+
+function parseWktPoint(
+  wkt: string | undefined
+): { lat: number; lng: number } | null {
+  // "Point(18.0708 59.3252)" — longitude first in WKT.
+  if (!wkt) return null;
+  const m = wkt.match(/Point\(([-0-9.]+)\s+([-0-9.]+)\)/i);
+  if (!m) return null;
+  const lng = parseFloat(m[1]);
+  const lat = parseFloat(m[2]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+  return { lat, lng };
+}
+
+// Wikidata "instance of" label → TravPad category. The label comes back in
+// English thanks to the SPARQL service's `bd:serviceParam wikibase:language
+// "en"`. Substring match keeps the table compact and forgiving.
+function mapWikidataInstance(label: string): CatPair | null {
+  const l = label.toLowerCase();
+  if (!l) return null;
+
+  if (
+    l.includes("museum") ||
+    l.includes("art gallery") ||
+    l.includes("art museum")
+  ) {
+    return { category: "Sights", subcategory: "Arts & Museums" };
+  }
+  if (
+    l.includes("church") ||
+    l.includes("cathedral") ||
+    l.includes("basilica") ||
+    l.includes("chapel") ||
+    l.includes("mosque") ||
+    l.includes("synagogue") ||
+    l.includes("temple") ||
+    l.includes("shrine") ||
+    l.includes("monastery") ||
+    l.includes("abbey")
+  ) {
+    return { category: "Sights", subcategory: "Temples & Religious Sites" };
+  }
+  if (
+    l.includes("castle") ||
+    l.includes("fortress") ||
+    l.includes("palace") ||
+    l.includes("manor") ||
+    l.includes("ruin") ||
+    l.includes("archaeological")
+  ) {
+    return { category: "Sights", subcategory: "History & Monuments" };
+  }
+  if (
+    l.includes("monument") ||
+    l.includes("memorial") ||
+    l.includes("statue") ||
+    l.includes("sculpture") ||
+    l.includes("obelisk") ||
+    l.includes("tower") ||
+    l.includes("bridge") ||
+    l.includes("square") ||
+    l.includes("piazza") ||
+    l.includes("plaza") ||
+    l.includes("landmark") ||
+    l.includes("tourist attraction")
+  ) {
+    return { category: "Sights", subcategory: "History & Monuments" };
+  }
+  if (
+    l.includes("national park") ||
+    l.includes("park") ||
+    l.includes("garden") ||
+    l.includes("nature reserve")
+  ) {
+    return { category: "Sights", subcategory: "Nature & Viewpoints" };
+  }
+  if (
+    l.includes("mountain") ||
+    l.includes("peak") ||
+    l.includes("hill") ||
+    l.includes("waterfall") ||
+    l.includes("lake") ||
+    l.includes("river") ||
+    l.includes("cave") ||
+    l.includes("viewpoint")
+  ) {
+    return { category: "Sights", subcategory: "Nature & Viewpoints" };
+  }
+  if (l.includes("beach") || l.includes("bay") || l.includes("cove")) {
+    return { category: "Sights", subcategory: "Beaches & Coastal" };
+  }
+  if (
+    l.includes("theatre") ||
+    l.includes("theater") ||
+    l.includes("opera") ||
+    l.includes("concert hall")
+  ) {
+    return {
+      category: "Entertainment",
+      subcategory: "Live Music & Performing Arts",
+    };
+  }
+  if (l.includes("cinema") || l.includes("movie theatre")) {
+    return {
+      category: "Entertainment",
+      subcategory: "Live Music & Performing Arts",
+    };
+  }
+  if (l.includes("library")) {
+    return {
+      category: "Internet & Work",
+      subcategory: "Wifi Cafés & Libraries",
+    };
+  }
+  if (l.includes("hotel")) {
+    return { category: "Sleep", subcategory: "Hotel & Resort" };
+  }
+  if (l.includes("stadium") || l.includes("arena")) {
+    return { category: "Activities", subcategory: "Adventure & Sports" };
+  }
+  return null;
 }

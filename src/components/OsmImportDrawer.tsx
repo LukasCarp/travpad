@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 import {
   bboxAreaDeg2,
   fetchOsmPois,
+  fetchWikidataPois,
   fetchWikiSummary,
   findUserPinKeys,
   translateToEnglish,
@@ -64,20 +65,54 @@ export default function OsmImportDrawer({
       setStatus("loading");
       setError(null);
       try {
-        const list = await fetchOsmPois(bounds);
+        // Query OSM and Wikidata in parallel. Either one failing doesn't
+        // kill the whole flow.
+        const [osmRes, wdRes] = await Promise.allSettled([
+          fetchOsmPois(bounds),
+          fetchWikidataPois(bounds),
+        ]);
+        const osmPins = osmRes.status === "fulfilled" ? osmRes.value : [];
+        const wdPins = wdRes.status === "fulfilled" ? wdRes.value : [];
+        if (osmRes.status === "rejected") {
+          console.warn("[osmImport] OSM fetch failed:", osmRes.reason);
+        }
+        if (wdRes.status === "rejected") {
+          console.warn("[osmImport] Wikidata fetch failed:", wdRes.reason);
+        }
         if (!alive) return;
 
+        // Merge with dedupe on Wikidata Q-id. OSM wins on collision since
+        // its tags carry the contact info (website/phone/email) that
+        // Wikidata SPARQL doesn't.
+        const byKey = new Map<string, CandidatePin>();
+        for (const p of osmPins) {
+          byKey.set(p.wikidataId ?? p.osmId, p);
+        }
+        for (const p of wdPins) {
+          const key = p.wikidataId ?? p.osmId;
+          if (!byKey.has(key)) byKey.set(key, p);
+        }
+        const list = [...byKey.values()];
+        console.log(
+          `[osmImport] merged: ${osmPins.length} OSM + ${wdPins.length} Wikidata = ${list.length} unique`
+        );
+
         // Drop anything you've already pinned. Match on `osm_id` (modern
-        // imports) and also on title + nearby coordinate (legacy pins
-        // without osm_id, ~50 m tolerance ≈ 0.0005°).
+        // imports), `wikidata_id`, and also on title + nearby coordinate
+        // (legacy pins without ids, ~50 m tolerance ≈ 0.0005°).
         console.log(
           `[osmImport] dedupe check — user=${user?.id ?? "(none)"}`
         );
         const keys = user
           ? await findUserPinKeys(supabase, user.id)
-          : { osmIds: new Set<string>(), coordsByTitle: new Map() };
+          : {
+              osmIds: new Set<string>(),
+              wikidataIds: new Set<string>(),
+              coordsByTitle: new Map(),
+            };
         const fresh = list.filter((p) => {
           if (keys.osmIds.has(p.osmId)) return false;
+          if (p.wikidataId && keys.wikidataIds.has(p.wikidataId)) return false;
           const sameTitle = keys.coordsByTitle.get(p.title);
           if (sameTitle) {
             for (const c of sameTitle) {
@@ -98,7 +133,7 @@ export default function OsmImportDrawer({
         // Cap at 100 to be polite to Wikipedia/MyMemory.
         const enriched = await Promise.all(
           fresh.slice(0, 100).map(async (p): Promise<CandidatePin | null> => {
-            const wd = p.rawTags?.wikidata;
+            const wd = p.wikidataId ?? p.rawTags?.wikidata;
             const wp = p.rawTags?.wikipedia;
             const s = await fetchWikiSummary(wd, wp);
             // Description is required; photo is optional.
@@ -107,7 +142,15 @@ export default function OsmImportDrawer({
               s.lang === "en"
                 ? s.extract
                 : await translateToEnglish(s.extract, s.lang);
-            return { ...p, description: text, imageUrl: s.thumbnailUrl };
+            return {
+              ...p,
+              description: text,
+              // Wikipedia's thumbnail takes precedence; Wikidata P18 is
+              // the fallback (already set on Wikidata-sourced candidates).
+              imageUrl: s.thumbnailUrl ?? p.imageUrl,
+              wikipediaTitle: s.title,
+              wikipediaLang: s.lang,
+            };
           })
         );
         const all = enriched.filter(
@@ -163,6 +206,19 @@ export default function OsmImportDrawer({
           if (path) imagePaths.push(path);
         }
 
+        // Capture where each piece of info came from so the future
+        // attribution UI has what it needs (Wikipedia title/lang, source).
+        const attributionDetails: Record<string, unknown> = {
+          ...p.details,
+          source: p.source,
+          osm_id: p.osmId,
+        };
+        if (p.wikidataId) attributionDetails.wikidata_id = p.wikidataId;
+        if (p.wikipediaTitle) {
+          attributionDetails.wikipedia_title = p.wikipediaTitle;
+          attributionDetails.wikipedia_lang = p.wikipediaLang;
+        }
+
         const { error: rpcError } = await supabase.rpc("create_pin", {
           p_title: p.title,
           p_category: p.category,
@@ -172,8 +228,7 @@ export default function OsmImportDrawer({
           p_short_description: p.short_description,
           p_description: p.description,
           p_services: p.services,
-          // Stash the OSM id so the drawer can dedupe future imports.
-          p_details: { ...p.details, osm_id: p.osmId },
+          p_details: attributionDetails,
           p_image_paths: imagePaths,
           p_secret: false,
         });
@@ -316,8 +371,20 @@ export default function OsmImportDrawer({
                             />
                           )}
                           <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-medium">
-                              {p.title}
+                            <div className="flex items-center gap-2">
+                              <span className="min-w-0 truncate text-sm font-medium">
+                                {p.title}
+                              </span>
+                              <span
+                                className={
+                                  "flex-none rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase " +
+                                  (p.source === "wikidata"
+                                    ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
+                                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300")
+                                }
+                              >
+                                {p.source === "wikidata" ? "Wikidata" : "OSM"}
+                              </span>
                             </div>
                             <div className="truncate text-xs text-neutral-500">
                               {p.category}

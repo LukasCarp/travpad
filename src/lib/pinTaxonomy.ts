@@ -220,8 +220,8 @@ export const TAXONOMY = [
     ],
   },
   {
-    name: "See/Do",
-    emoji: "🌲",
+    name: "Sights",
+    emoji: "🏛️",
     subcategories: [
       {
         name: "Nature & Viewpoints",
@@ -280,6 +280,12 @@ export const TAXONOMY = [
           "Free Entry Days",
         ],
       },
+    ],
+  },
+  {
+    name: "Activities",
+    emoji: "🧗",
+    subcategories: [
       {
         name: "Adventure & Sports",
         chips: [
@@ -547,7 +553,8 @@ const CATEGORY_COLOR: Record<string, string> = {
   Area: "#64748b",
   "Eat/Drink": "#f97316",
   Sleep: "#6366f1",
-  "See/Do": "#22c55e",
+  Sights: "#22c55e",
+  Activities: "#06b6d4",
   Entertainment: "#d946ef",
   Shopping: "#14b8a6",
   Money: "#eab308",
@@ -559,7 +566,8 @@ const CATEGORY_ICON: Record<string, LucideIcon> = {
   Area: MapIcon,
   "Eat/Drink": Utensils,
   Sleep: Bed,
-  "See/Do": Camera,
+  Sights: Landmark,
+  Activities: Bike,
   Entertainment: Music,
   Shopping: ShoppingBag,
   Money: Banknote,
