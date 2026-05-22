@@ -100,7 +100,10 @@ export default function TravPadHome() {
     const selected = new Set(categoryFilter);
     const wantSecret = selected.has(SECRET_FILTER);
     return pins.filter(
-      (p) => selected.has(p.category) || (wantSecret && p.secret)
+      (p) =>
+        selected.has(p.category) ||
+        (p.subcategory != null && selected.has(p.subcategory)) ||
+        (wantSecret && p.secret)
     );
   }, [pins, categoryFilter]);
 
