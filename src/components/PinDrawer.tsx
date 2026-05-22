@@ -11,6 +11,7 @@ import {
   MapPin,
   Pencil,
   Share2,
+  Star,
   Trash2,
   X,
 } from "lucide-react";
@@ -299,8 +300,12 @@ export default function PinDrawer({
                       </span>
                     )}
                     {pin.secret && (
-                      <span className="rounded-full bg-violet-100 px-2.5 py-1 font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
-                        🤫 Secret Spot
+                      <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2.5 py-1 font-medium text-violet-700 dark:bg-violet-950 dark:text-violet-200">
+                        <Star
+                          className="h-3.5 w-3.5 flex-none fill-amber-400 text-amber-400"
+                          aria-hidden="true"
+                        />
+                        Secret Spot
                       </span>
                     )}
                   </div>
