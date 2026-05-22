@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, Layers, Minus } from "lucide-react";
+import { Check, ChevronDown, Layers, Minus, Star } from "lucide-react";
 import {
   CATEGORIES,
   colorForCategory,
@@ -20,9 +20,10 @@ type Props = {
 function CategoryItemIcon({ value }: { value: string }) {
   if (value === SECRET_FILTER) {
     return (
-      <span aria-hidden="true" className="flex-none text-base leading-none">
-        🤫
-      </span>
+      <Star
+        className="h-4 w-4 flex-none fill-amber-400 text-amber-400"
+        aria-hidden="true"
+      />
     );
   }
   const Icon = iconForCategory(value);

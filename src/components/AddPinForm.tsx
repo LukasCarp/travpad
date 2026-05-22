@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MapPin, Move, X } from "lucide-react";
+import { MapPin, Move, Star, X } from "lucide-react";
 import type { NewPin, Pin } from "@/lib/supabase";
 import {
   CATEGORIES,
@@ -362,7 +362,11 @@ export default function AddPinForm({
             <div className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-800/40">
               <div>
                 <div className="flex items-center gap-1.5 text-sm font-medium">
-                  <span aria-hidden="true">🤫</span> Secret Spot
+                  <Star
+                    className="h-4 w-4 flex-none fill-amber-400 text-amber-400"
+                    aria-hidden="true"
+                  />{" "}
+                  Secret Spot
                 </div>
                 <p className="text-xs text-neutral-500">
                   Mark this as a hidden gem — it gets a special marker on the

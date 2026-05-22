@@ -6,6 +6,7 @@ import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { renderToStaticMarkup } from "react-dom/server";
+import { Star } from "lucide-react";
 import { useMap } from "react-leaflet";
 import type { Pin } from "@/lib/supabase";
 import {
@@ -14,14 +15,20 @@ import {
   iconForSubcategory,
 } from "@/lib/pinTaxonomy";
 
-// Secret-spot pins get a distinct violet badge instead of the standard pin.
+const SECRET_STAR_SVG = renderToStaticMarkup(
+  <Star color="#fbbf24" fill="#fbbf24" size={18} strokeWidth={2} />
+);
+
+// Secret-spot pins get a distinct sage badge with a filled gold star.
 const secretIcon = L.divIcon({
   className: "",
   html:
     '<div style="display:flex;align-items:center;justify-content:center;' +
     "width:34px;height:34px;border-radius:9999px;background:#646c5a;" +
-    "font-size:18px;border:2px solid #fff;" +
-    'box-shadow:0 2px 6px rgba(0,0,0,0.4);">🤫</div>',
+    "border:2px solid #fff;" +
+    'box-shadow:0 2px 6px rgba(0,0,0,0.4);">' +
+    SECRET_STAR_SVG +
+    "</div>",
   iconSize: [34, 34],
   iconAnchor: [17, 34],
   popupAnchor: [0, -34],
