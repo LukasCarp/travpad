@@ -12,6 +12,28 @@
 import type { createClient } from "@/lib/supabase/client";
 import { chipsFor } from "@/lib/pinTaxonomy";
 
+type UnescoSite = {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  country?: string;
+  year?: number;
+  image?: string;
+};
+
+// Lazy-load the bundled UNESCO dataset (~430 KB JSON) on first use so it
+// doesn't bloat the home page's initial bundle.
+let unescoSitesPromise: Promise<UnescoSite[]> | null = null;
+function loadUnescoSites(): Promise<UnescoSite[]> {
+  if (!unescoSitesPromise) {
+    unescoSitesPromise = import("@/data/unesco-sites.json").then(
+      (m) => m.default as UnescoSite[]
+    );
+  }
+  return unescoSitesPromise;
+}
+
 export type OsmBounds = {
   south: number;
   west: number;
@@ -25,7 +47,7 @@ export type CandidatePin = {
   // the pin came in via the Wikidata SPARQL fallback). Used to dedupe
   // between the two import sources.
   wikidataId?: string;
-  source: "osm" | "wikidata" | "wikivoyage";
+  source: "osm" | "wikidata" | "wikivoyage" | "unesco";
   lat: number;
   lng: number;
   title: string;
@@ -41,6 +63,8 @@ export type CandidatePin = {
   wikipediaTitle?: string;
   wikipediaLang?: string;
   wikivoyageArticle?: string;
+  unescoYear?: number;
+  unescoCountry?: string;
   rawTags: Record<string, string>;
 };
 
@@ -807,6 +831,83 @@ type WikivoyageListing = {
   address?: string;
   article: string;
 };
+
+// Used by the drawer to "overlay" UNESCO metadata onto pins that already
+// came in via OSM/Wikidata/Wikivoyage — adds the UNESCO Heritage chip,
+// flips the source so the badge says UNESCO, and falls back to the UNESCO
+// image when the existing pin lacks one. Sites with no matching pin yet
+// are appended as fresh UNESCO-source pins.
+export async function mergeUnesco(
+  list: CandidatePin[],
+  bounds: OsmBounds
+): Promise<CandidatePin[]> {
+  const all = await loadUnescoSites();
+  const sitesById = new Map<string, UnescoSite>();
+  for (const s of all) {
+    if (
+      s.lat >= bounds.south &&
+      s.lat <= bounds.north &&
+      s.lng >= bounds.west &&
+      s.lng <= bounds.east
+    ) {
+      sitesById.set(s.id, s);
+    }
+  }
+  if (sitesById.size === 0) return list;
+
+  const matched = new Set<string>();
+  const enriched = list.map((p) => {
+    if (!p.wikidataId) return p;
+    const s = sitesById.get(p.wikidataId);
+    if (!s) return p;
+    matched.add(p.wikidataId);
+    return {
+      ...p,
+      source: "unesco" as const,
+      services: p.services.includes("UNESCO Heritage")
+        ? p.services
+        : [...p.services, "UNESCO Heritage"],
+      imageUrl: p.imageUrl ?? buildUnescoImageUrl(s.image),
+      unescoYear: s.year,
+      unescoCountry: s.country,
+    };
+  });
+  for (const [qid, s] of sitesById) {
+    if (matched.has(qid)) continue;
+    enriched.push(unescoSiteToPin(s));
+  }
+  return enriched;
+}
+
+function unescoSiteToPin(s: UnescoSite): CandidatePin {
+  return {
+    osmId: `unesco/${s.id}`,
+    wikidataId: s.id,
+    source: "unesco",
+    lat: s.lat,
+    lng: s.lng,
+    title: s.name,
+    category: "Sights",
+    subcategory: "History & Monuments",
+    short_description: null,
+    description: null,
+    services: chipsFor("Sights", "History & Monuments").includes(
+      "UNESCO Heritage"
+    )
+      ? ["UNESCO Heritage"]
+      : [],
+    details: {},
+    imageUrl: buildUnescoImageUrl(s.image),
+    unescoYear: s.year,
+    unescoCountry: s.country,
+    rawTags: { wikidata: s.id },
+  };
+}
+
+function buildUnescoImageUrl(raw: string | undefined): string | undefined {
+  if (!raw) return undefined;
+  return raw.replace(/^http:/, "https:") + "?width=640";
+}
 
 // Wikivoyage listings come pre-typed (see/do/eat/drink/sleep/buy). They
 // don't subdivide further inside the template, so map to the broadest

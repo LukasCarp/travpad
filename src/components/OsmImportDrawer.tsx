@@ -17,6 +17,7 @@ import {
   fetchWikivoyagePois,
   fetchWikiSummary,
   findUserPinKeys,
+  mergeUnesco,
   translateToEnglish,
   uploadImageFromUrl,
   type CandidatePin,
@@ -102,9 +103,13 @@ export default function OsmImportDrawer({
         for (const p of wvPins) {
           byKey.set(p.osmId, p);
         }
-        const list = [...byKey.values()];
+        // UNESCO is overlay: existing pins get the heritage chip + flip
+        // to source="unesco"; uncovered UNESCO sites are appended fresh.
+        const list = await mergeUnesco([...byKey.values()], bounds);
+        if (!alive) return;
+        const unescoFlipped = list.filter((p) => p.source === "unesco").length;
         console.log(
-          `[osmImport] merged: ${osmPins.length} OSM + ${wdPins.length} Wikidata + ${wvPins.length} Wikivoyage = ${list.length} unique`
+          `[osmImport] merged: ${osmPins.length} OSM + ${wdPins.length} Wikidata + ${wvPins.length} Wikivoyage = ${byKey.size} unique → ${list.length} after UNESCO overlay (${unescoFlipped} UNESCO-flagged)`
         );
 
         // Drop anything you've already pinned. Match on `osm_id` (modern
@@ -151,8 +156,10 @@ export default function OsmImportDrawer({
             const wd = p.wikidataId ?? p.rawTags?.wikidata;
             const wp = p.rawTags?.wikipedia;
             const s = await fetchWikiSummary(wd, wp);
-            // Description is required; photo is optional.
-            if (!s?.extract) return null;
+            // Description is required; photo is optional. UNESCO sites
+            // pass even without a Wikipedia article — they're worth
+            // keeping for the name + image + heritage chip alone.
+            if (!s?.extract) return p.source === "unesco" ? p : null;
             const text =
               s.lang === "en"
                 ? s.extract
@@ -236,6 +243,12 @@ export default function OsmImportDrawer({
         if (p.wikivoyageArticle) {
           attributionDetails.wikivoyage_article = p.wikivoyageArticle;
           attributionDetails.wikivoyage_lang = "en";
+        }
+        if (p.source === "unesco") {
+          attributionDetails.unesco = true;
+          if (p.unescoYear) attributionDetails.unesco_year = p.unescoYear;
+          if (p.unescoCountry)
+            attributionDetails.unesco_country = p.unescoCountry;
         }
 
         const { error: rpcError } = await supabase.rpc("create_pin", {
@@ -401,14 +414,18 @@ export default function OsmImportDrawer({
                                     ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
                                     : p.source === "wikivoyage"
                                       ? "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300"
-                                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300")
+                                      : p.source === "unesco"
+                                        ? "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                                        : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300")
                                 }
                               >
                                 {p.source === "wikidata"
                                   ? "Wikidata"
                                   : p.source === "wikivoyage"
                                     ? "Wikivoyage"
-                                    : "OSM"}
+                                    : p.source === "unesco"
+                                      ? "UNESCO"
+                                      : "OSM"}
                               </span>
                             </div>
                             <div className="truncate text-xs text-neutral-500">
