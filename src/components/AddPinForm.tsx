@@ -359,16 +359,16 @@ export default function AddPinForm({
               />
             </div>
 
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-800/40">
+            <div className="flex items-center justify-between gap-3 rounded-lg border-2 border-amber-300 bg-amber-50 p-3 shadow-sm dark:border-amber-800 dark:bg-amber-950/30">
               <div>
-                <div className="flex items-center gap-1.5 text-sm font-medium">
+                <div className="flex items-center gap-1.5 text-sm font-semibold text-amber-900 dark:text-amber-100">
                   <Star
                     className="h-4 w-4 flex-none fill-amber-400 text-amber-400"
                     aria-hidden="true"
-                  />{" "}
+                  />
                   Secret Spot
                 </div>
-                <p className="text-xs text-neutral-500">
+                <p className="text-xs text-amber-700/80 dark:text-amber-200/70">
                   Mark this as a hidden gem — it gets a special marker on the
                   map.
                 </p>
@@ -382,7 +382,7 @@ export default function AddPinForm({
                 className={
                   "relative h-6 w-11 flex-none rounded-full transition " +
                   (secret
-                    ? "bg-violet-600"
+                    ? "bg-amber-500"
                     : "bg-neutral-300 dark:bg-neutral-700")
                 }
               >
