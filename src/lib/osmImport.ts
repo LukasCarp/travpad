@@ -25,7 +25,7 @@ export type CandidatePin = {
   // the pin came in via the Wikidata SPARQL fallback). Used to dedupe
   // between the two import sources.
   wikidataId?: string;
-  source: "osm" | "wikidata";
+  source: "osm" | "wikidata" | "wikivoyage";
   lat: number;
   lng: number;
   title: string;
@@ -40,6 +40,7 @@ export type CandidatePin = {
   // `details` for the eventual per-pin attribution UI.
   wikipediaTitle?: string;
   wikipediaLang?: string;
+  wikivoyageArticle?: string;
   rawTags: Record<string, string>;
 };
 
@@ -738,4 +739,93 @@ function mapWikidataInstance(label: string): CatPair | null {
     return { category: "Activities", subcategory: "Adventure & Sports" };
   }
   return null;
+}
+
+// Wikivoyage fallback — uses /api/wikivoyage which combines a Wikidata
+// SPARQL ("which Wikivoyage articles cover this bbox?") with article
+// wikitext parsing into one server-side round-trip. Listings come back
+// with their own descriptions, so they bypass the Wikipedia enrichment
+// in the drawer.
+export async function fetchWikivoyagePois(
+  bounds: OsmBounds
+): Promise<CandidatePin[]> {
+  const res = await fetch("/api/wikivoyage", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bbox: bounds }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`Wikivoyage proxy ${res.status}: ${text || "no body"}`);
+  }
+  const data = (await res.json()) as { listings?: WikivoyageListing[] };
+  const listings = data.listings ?? [];
+  console.log(`[osmImport] wikivoyage returned ${listings.length} listings`);
+
+  const out: CandidatePin[] = [];
+  for (const l of listings) {
+    const mapping = mapWikivoyageType(l.type);
+    if (!mapping) continue;
+    const slug = l.title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 60);
+    const details: { website?: string; phone?: string; email?: string } = {};
+    if (l.url) details.website = l.url;
+    if (l.phone) details.phone = l.phone;
+    if (l.email) details.email = l.email;
+
+    out.push({
+      osmId: `wikivoyage/${l.article}/${slug}`,
+      source: "wikivoyage",
+      lat: l.lat,
+      lng: l.lng,
+      title: l.title,
+      category: mapping.category,
+      subcategory: mapping.subcategory,
+      short_description: null,
+      description: l.content && l.content.length > 0 ? l.content : null,
+      services: [],
+      details,
+      wikivoyageArticle: l.article,
+      rawTags: {},
+    });
+  }
+  return out;
+}
+
+type WikivoyageListing = {
+  type: string;
+  title: string;
+  lat: number;
+  lng: number;
+  content?: string;
+  url?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  article: string;
+};
+
+// Wikivoyage listings come pre-typed (see/do/eat/drink/sleep/buy). They
+// don't subdivide further inside the template, so map to the broadest
+// matching TravPad subcategory; the user can refine on edit.
+function mapWikivoyageType(type: string): CatPair | null {
+  switch (type) {
+    case "see":
+      return { category: "Sights", subcategory: "History & Monuments" };
+    case "do":
+      return { category: "Activities", subcategory: "Tours & Guides" };
+    case "eat":
+      return { category: "Eat/Drink", subcategory: "Restaurant" };
+    case "drink":
+      return { category: "Eat/Drink", subcategory: "Bars & Pubs" };
+    case "sleep":
+      return { category: "Sleep", subcategory: "Hotel & Resort" };
+    case "buy":
+      return { category: "Shopping", subcategory: "Specialty & Hobbies" };
+    default:
+      return null;
+  }
 }

@@ -14,6 +14,7 @@ import {
   bboxAreaDeg2,
   fetchOsmPois,
   fetchWikidataPois,
+  fetchWikivoyagePois,
   fetchWikiSummary,
   findUserPinKeys,
   translateToEnglish,
@@ -65,25 +66,31 @@ export default function OsmImportDrawer({
       setStatus("loading");
       setError(null);
       try {
-        // Query OSM and Wikidata in parallel. Either one failing doesn't
-        // kill the whole flow.
-        const [osmRes, wdRes] = await Promise.allSettled([
+        // Query OSM, Wikidata and Wikivoyage in parallel. If any of them
+        // fails the others still drive the list.
+        const [osmRes, wdRes, wvRes] = await Promise.allSettled([
           fetchOsmPois(bounds),
           fetchWikidataPois(bounds),
+          fetchWikivoyagePois(bounds),
         ]);
         const osmPins = osmRes.status === "fulfilled" ? osmRes.value : [];
         const wdPins = wdRes.status === "fulfilled" ? wdRes.value : [];
+        const wvPins = wvRes.status === "fulfilled" ? wvRes.value : [];
         if (osmRes.status === "rejected") {
           console.warn("[osmImport] OSM fetch failed:", osmRes.reason);
         }
         if (wdRes.status === "rejected") {
           console.warn("[osmImport] Wikidata fetch failed:", wdRes.reason);
         }
+        if (wvRes.status === "rejected") {
+          console.warn("[osmImport] Wikivoyage fetch failed:", wvRes.reason);
+        }
         if (!alive) return;
 
-        // Merge with dedupe on Wikidata Q-id. OSM wins on collision since
-        // its tags carry the contact info (website/phone/email) that
-        // Wikidata SPARQL doesn't.
+        // Merge — OSM ↔ Wikidata dedupe by Q-id (OSM wins for contact
+        // info); Wikivoyage listings have their own ids and aren't
+        // automatically deduped against the others (the title + coord
+        // pass in findUserPinKeys catches obvious overlaps on re-import).
         const byKey = new Map<string, CandidatePin>();
         for (const p of osmPins) {
           byKey.set(p.wikidataId ?? p.osmId, p);
@@ -92,9 +99,12 @@ export default function OsmImportDrawer({
           const key = p.wikidataId ?? p.osmId;
           if (!byKey.has(key)) byKey.set(key, p);
         }
+        for (const p of wvPins) {
+          byKey.set(p.osmId, p);
+        }
         const list = [...byKey.values()];
         console.log(
-          `[osmImport] merged: ${osmPins.length} OSM + ${wdPins.length} Wikidata = ${list.length} unique`
+          `[osmImport] merged: ${osmPins.length} OSM + ${wdPins.length} Wikidata + ${wvPins.length} Wikivoyage = ${list.length} unique`
         );
 
         // Drop anything you've already pinned. Match on `osm_id` (modern
@@ -133,6 +143,11 @@ export default function OsmImportDrawer({
         // Cap at 100 to be polite to Wikipedia/MyMemory.
         const enriched = await Promise.all(
           fresh.slice(0, 100).map(async (p): Promise<CandidatePin | null> => {
+            // Wikivoyage POIs ship with their own description from the
+            // listing template — no Wikipedia round-trip needed.
+            if (p.source === "wikivoyage") {
+              return p.description ? p : null;
+            }
             const wd = p.wikidataId ?? p.rawTags?.wikidata;
             const wp = p.rawTags?.wikipedia;
             const s = await fetchWikiSummary(wd, wp);
@@ -217,6 +232,10 @@ export default function OsmImportDrawer({
         if (p.wikipediaTitle) {
           attributionDetails.wikipedia_title = p.wikipediaTitle;
           attributionDetails.wikipedia_lang = p.wikipediaLang;
+        }
+        if (p.wikivoyageArticle) {
+          attributionDetails.wikivoyage_article = p.wikivoyageArticle;
+          attributionDetails.wikivoyage_lang = "en";
         }
 
         const { error: rpcError } = await supabase.rpc("create_pin", {
@@ -380,10 +399,16 @@ export default function OsmImportDrawer({
                                   "flex-none rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase " +
                                   (p.source === "wikidata"
                                     ? "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300"
-                                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300")
+                                    : p.source === "wikivoyage"
+                                      ? "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300"
+                                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300")
                                 }
                               >
-                                {p.source === "wikidata" ? "Wikidata" : "OSM"}
+                                {p.source === "wikidata"
+                                  ? "Wikidata"
+                                  : p.source === "wikivoyage"
+                                    ? "Wikivoyage"
+                                    : "OSM"}
                               </span>
                             </div>
                             <div className="truncate text-xs text-neutral-500">
