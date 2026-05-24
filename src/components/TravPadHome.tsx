@@ -461,20 +461,28 @@ export default function TravPadHome() {
         )}
 
         {/* Profile / sign-in — level with the category filter */}
-        <div className="absolute right-4 top-20 z-[500]">
+        <div className="absolute right-4 top-20 z-[500] flex items-center gap-2">
           {authLoading ? (
             <div className="h-9 w-20 animate-pulse rounded-full bg-white/80 dark:bg-neutral-900/80" />
           ) : user ? (
             <ProfileMenu />
           ) : (
-            <button
-              type="button"
-              onClick={() => setLoginOpen(true)}
-              className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-4 py-1.5 text-sm font-medium text-white shadow-lg hover:bg-rose-600"
-            >
-              <LogIn className="h-4 w-4" />
-              Sign in
-            </button>
+            <>
+              <Link
+                href="/about"
+                className="inline-flex items-center rounded-full bg-white/95 px-3 py-1.5 text-sm font-medium text-neutral-700 shadow-lg ring-1 ring-black/10 hover:bg-white dark:bg-neutral-900/95 dark:text-neutral-200 dark:ring-white/10"
+              >
+                About
+              </Link>
+              <button
+                type="button"
+                onClick={() => setLoginOpen(true)}
+                className="inline-flex items-center gap-2 rounded-full bg-rose-500 px-4 py-1.5 text-sm font-medium text-white shadow-lg hover:bg-rose-600"
+              >
+                <LogIn className="h-4 w-4" />
+                Sign in
+              </button>
+            </>
           )}
         </div>
 
