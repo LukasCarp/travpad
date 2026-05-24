@@ -33,24 +33,31 @@ function VideoSlot({
   poster,
   className = "",
   aspect = "aspect-video",
+  loop = true,
 }: {
   src?: string | null;
   label: string;
   poster?: string;
   className?: string;
   aspect?: string;
+  loop?: boolean;
 }) {
   if (src) {
     return (
-      <video
-        src={src}
-        poster={poster}
-        autoPlay
-        muted
-        loop
-        playsInline
-        className={`${aspect} w-full rounded-2xl object-cover shadow-xl ring-1 ring-black/10 dark:ring-white/10 ${className}`}
-      />
+      <div
+        className={`relative ${aspect} w-full overflow-hidden rounded-2xl shadow-xl ring-1 ring-black/10 dark:ring-white/10 ${className}`}
+      >
+        <video
+          src={src}
+          poster={poster}
+          controls
+          loop={loop}
+          playsInline
+          preload="metadata"
+          aria-label={label}
+          className="h-full w-full object-cover"
+        />
+      </div>
     );
   }
   return (
@@ -124,7 +131,13 @@ export default function AboutPage() {
         </div>
 
         <div className="mt-12">
-          <VideoSlot src={null} label="TravPad in action" aspect="aspect-[16/9]" />
+          <VideoSlot
+            src="/travpad-promo.mp4"
+            label="TravPad in action"
+            aspect="aspect-[9/16]"
+            className="mx-auto max-w-sm"
+            loop={false}
+          />
         </div>
       </section>
 
