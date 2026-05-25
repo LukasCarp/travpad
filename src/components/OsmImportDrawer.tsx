@@ -60,12 +60,23 @@ export default function OsmImportDrawer({
     null
   );
   const [skippedAlreadyImported, setSkippedAlreadyImported] = useState(0);
+  const [truncated, setTruncated] = useState(0);
 
   useEffect(() => {
     let alive = true;
     (async () => {
       setStatus("loading");
       setError(null);
+      // Guard against huge bboxes — Overpass/Wikidata will return a flood
+      // of candidates (or just time out), the UI becomes unmanageable, and
+      // we hammer free APIs unnecessarily. 0.5 deg² ≈ a 78 km × 78 km box.
+      if (bboxAreaDeg2(bounds) > 0.5) {
+        setStatus("error");
+        setError(
+          "This area is too large to import from — zoom in to roughly a city or smaller, then try again."
+        );
+        return;
+      }
       try {
         // Query OSM, Wikidata and Wikivoyage in parallel. If any of them
         // fails the others still drive the list.
@@ -145,9 +156,12 @@ export default function OsmImportDrawer({
 
         // Enrich each candidate with Wikipedia + thumbnail. Only keep the
         // POIs where we got *both* — that's the whole point of this mode.
-        // Cap at 100 to be polite to Wikipedia/MyMemory.
+        // Cap at 50 so the UI is reviewable in one sitting and we stay
+        // polite to Wikipedia/MyMemory.
+        const ENRICH_CAP = 50;
+        const truncatedFromFetch = fresh.length - ENRICH_CAP;
         const enriched = await Promise.all(
-          fresh.slice(0, 100).map(async (p): Promise<CandidatePin | null> => {
+          fresh.slice(0, ENRICH_CAP).map(async (p): Promise<CandidatePin | null> => {
             // Wikivoyage POIs ship with their own description from the
             // listing template — no Wikipedia round-trip needed.
             if (p.source === "wikivoyage") {
@@ -181,6 +195,7 @@ export default function OsmImportDrawer({
         if (!alive) return;
         setCandidates(all);
         setSelected(new Set(all.map((p) => p.osmId)));
+        setTruncated(Math.max(0, truncatedFromFetch));
         setStatus("ready");
       } catch (e) {
         if (alive) {
@@ -357,6 +372,13 @@ export default function OsmImportDrawer({
                 {skippedAlreadyImported} place
                 {skippedAlreadyImported === 1 ? "" : "s"} already imported and
                 hidden.
+              </p>
+            )}
+
+            {truncated > 0 && (
+              <p className="mb-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-200">
+                Showing the first 50 — {truncated} more found in this area.
+                Zoom in to see different places.
               </p>
             )}
 

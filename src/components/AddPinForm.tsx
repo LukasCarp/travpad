@@ -208,9 +208,9 @@ export default function AddPinForm({
                 <button
                   type="button"
                   onClick={onStartRelocate}
-                  className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200"
                 >
-                  <Move className="h-3 w-3" />
+                  <Move className="h-4 w-4" />
                   Move
                 </button>
               )}
