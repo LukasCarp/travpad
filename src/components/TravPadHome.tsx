@@ -439,6 +439,31 @@ export default function TravPadHome() {
 
   const clearMapFocus = useCallback(() => setMapFocus(null), []);
 
+  // When the user lands on /?pin=<id> (typically from a shared link),
+  // zoom the map all the way in to that pin once pins are loaded. Runs
+  // exactly once per mount; later clicks on pins don't re-trigger this.
+  const initialPinFocusedRef = useRef(false);
+  useEffect(() => {
+    if (initialPinFocusedRef.current) return;
+    if (loading || pins.length === 0) return;
+    const initialPin = searchParams.get("pin");
+    if (!initialPin) {
+      initialPinFocusedRef.current = true;
+      return;
+    }
+    const p = pins.find((pin) => pin.id === initialPin);
+    if (!p) return;
+    initialPinFocusedRef.current = true;
+    // Ensure the marker is actually visible — the saved category filter
+    // may have hidden this pin's category.
+    setCategoryFilter((curr) =>
+      curr.length === 0 || curr.includes(p.category)
+        ? curr
+        : [...curr, p.category]
+    );
+    setMapFocus({ lat: p.lat, lng: p.lng, zoom: 18 });
+  }, [loading, pins, searchParams]);
+
   const handleShowOnMap = useCallback(() => {
     if (!selectedPin) return;
     // The map only renders pins whose category is in the filter, so make sure
