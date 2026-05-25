@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, ChevronDown, Layers, Minus, Star } from "lucide-react";
+import { Award, Check, ChevronDown, Layers, Minus, Star } from "lucide-react";
 import {
   CATEGORIES,
   colorForCategory,
@@ -11,6 +11,7 @@ import {
 } from "@/lib/pinTaxonomy";
 
 export const SECRET_FILTER = "Secret Spot";
+export const TOP_TEN_FILTER = "Top Ten";
 
 type Props = {
   active: string[];
@@ -22,6 +23,14 @@ function CategoryItemIcon({ value }: { value: string }) {
     return (
       <Star
         className="h-4 w-4 flex-none fill-amber-400 text-amber-400"
+        aria-hidden="true"
+      />
+    );
+  }
+  if (value === TOP_TEN_FILTER) {
+    return (
+      <Award
+        className="h-4 w-4 flex-none text-amber-400"
         aria-hidden="true"
       />
     );
@@ -84,6 +93,14 @@ export default function CategoryFilter({ active, onChange }: Props) {
       active.includes(SECRET_FILTER)
         ? active.filter((v) => v !== SECRET_FILTER)
         : [...active, SECRET_FILTER]
+    );
+  }
+
+  function toggleTopTen() {
+    onChange(
+      active.includes(TOP_TEN_FILTER)
+        ? active.filter((v) => v !== TOP_TEN_FILTER)
+        : [...active, TOP_TEN_FILTER]
     );
   }
 
@@ -217,6 +234,23 @@ export default function CategoryFilter({ active, onChange }: Props) {
             <CategoryItemIcon value={SECRET_FILTER} />
             <span className="flex-1">{SECRET_FILTER}</span>
             {active.includes(SECRET_FILTER) && (
+              <Check className="h-4 w-4 flex-none" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={toggleTopTen}
+            className={
+              "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 " +
+              (active.includes(TOP_TEN_FILTER)
+                ? "font-medium text-violet-700 dark:text-violet-300"
+                : "")
+            }
+          >
+            <CategoryItemIcon value={TOP_TEN_FILTER} />
+            <span className="flex-1">{TOP_TEN_FILTER}</span>
+            {active.includes(TOP_TEN_FILTER) && (
               <Check className="h-4 w-4 flex-none" />
             )}
           </button>

@@ -111,6 +111,42 @@ function ViewPersistence() {
   return null;
 }
 
+export type ViewportBounds = {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+};
+
+// Reports the current viewport on mount and on each pan/zoom — used by
+// Top Ten mode to re-rank against what's actually visible.
+function BoundsReporter({
+  onBounds,
+}: {
+  onBounds: (b: ViewportBounds) => void;
+}) {
+  const map = useMap();
+  useEffect(() => {
+    const report = () => {
+      const b = map.getBounds();
+      onBounds({
+        minLat: b.getSouth(),
+        maxLat: b.getNorth(),
+        minLng: b.getWest(),
+        maxLng: b.getEast(),
+      });
+    };
+    report();
+    map.on("moveend", report);
+    map.on("zoomend", report);
+    return () => {
+      map.off("moveend", report);
+      map.off("zoomend", report);
+    };
+  }, [map, onBounds]);
+  return null;
+}
+
 export default function MapCanvas({
   pins,
   basemap,
@@ -119,6 +155,8 @@ export default function MapCanvas({
   focus,
   onFocusConsumed,
   onRequestOsmImport,
+  topTenMode = false,
+  onBoundsChange,
 }: {
   pins: Pin[];
   basemap: Basemap;
@@ -127,6 +165,8 @@ export default function MapCanvas({
   focus: MapFocus;
   onFocusConsumed: () => void;
   onRequestOsmImport: (bounds: OsmBounds) => void;
+  topTenMode?: boolean;
+  onBoundsChange?: (b: ViewportBounds) => void;
 }) {
   const [savedView] = useState(loadSavedView);
 
@@ -145,11 +185,16 @@ export default function MapCanvas({
         url={BASEMAPS[basemap].url}
       />
       <ClickHandler onMapClick={onMapClick} />
-      <MarkerCluster pins={pins} onPinClick={onPinClick} />
+      <MarkerCluster
+        pins={pins}
+        onPinClick={onPinClick}
+        topTenMode={topTenMode}
+      />
       <UserLocation />
       <DownloadButton tileTemplate={BASEMAPS[basemap].url} />
       <FocusController focus={focus} onConsumed={onFocusConsumed} />
       <ViewPersistence />
+      {onBoundsChange && <BoundsReporter onBounds={onBoundsChange} />}
       <OsmImportButton onRequest={onRequestOsmImport} />
     </MapContainer>
   );

@@ -10,7 +10,10 @@ import type { NewPin, Pin } from "@/lib/supabase";
 import { getOfflinePins } from "@/lib/offline/db";
 import AddPinFab from "./AddPinFab";
 import AddPinForm from "./AddPinForm";
-import CategoryFilter, { SECRET_FILTER } from "./CategoryFilter";
+import CategoryFilter, {
+  SECRET_FILTER,
+  TOP_TEN_FILTER,
+} from "./CategoryFilter";
 import ListDrawer from "./ListDrawer";
 import LoginModal from "./LoginModal";
 import MessageDrawer from "./MessageDrawer";
@@ -22,7 +25,7 @@ import ProfileMenu from "./ProfileMenu";
 import ProfilePageContent from "./ProfilePageContent";
 import SearchBox from "./SearchBox";
 import { useAuth } from "./AuthProvider";
-import type { Basemap, MapFocus } from "./MapCanvas";
+import type { Basemap, MapFocus, ViewportBounds } from "./MapCanvas";
 
 const MapCanvas = dynamic(() => import("./MapCanvas"), {
   ssr: false,
@@ -95,17 +98,96 @@ export default function TravPadHome() {
     [pins, editingId]
   );
 
+  // Average rating per pin (lazy-loaded the first time Top Ten is toggled).
+  const [ratings, setRatings] = useState<
+    Map<string, { avg: number; count: number }>
+  >(new Map());
+  const ratingsLoaded = useRef(false);
+  const topTenActive = categoryFilter.includes(TOP_TEN_FILTER);
+
+  // Current map viewport, captured on moveend/zoomend. Top Ten ranks against
+  // whatever is visible right now so panning re-ranks instantly.
+  const [mapBounds, setMapBounds] = useState<ViewportBounds | null>(null);
+
+  useEffect(() => {
+    if (!topTenActive || ratingsLoaded.current) return;
+    ratingsLoaded.current = true;
+    let alive = true;
+    (async () => {
+      const { data } = await supabase
+        .from("pin_reviews")
+        .select("pin_id, rating");
+      if (!alive) return;
+      const sums = new Map<string, { sum: number; count: number }>();
+      for (const r of (data ?? []) as { pin_id: string; rating: number }[]) {
+        const cur = sums.get(r.pin_id) ?? { sum: 0, count: 0 };
+        cur.sum += r.rating;
+        cur.count++;
+        sums.set(r.pin_id, cur);
+      }
+      const next = new Map<string, { avg: number; count: number }>();
+      for (const [id, v] of sums) {
+        next.set(id, { avg: v.sum / v.count, count: v.count });
+      }
+      setRatings(next);
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [topTenActive, supabase]);
+
   const visiblePins = useMemo(() => {
     if (categoryFilter.length === 0) return [];
     const selected = new Set(categoryFilter);
     const wantSecret = selected.has(SECRET_FILTER);
-    return pins.filter(
-      (p) =>
-        selected.has(p.category) ||
-        (p.subcategory != null && selected.has(p.subcategory)) ||
-        (wantSecret && p.secret)
+    const wantTopTen = selected.has(TOP_TEN_FILTER);
+
+    // Anything left in the filter once "modes" (Secret/TopTen) are stripped
+    // counts as a category/subcategory restriction.
+    const real = categoryFilter.filter(
+      (v) => v !== SECRET_FILTER && v !== TOP_TEN_FILTER
     );
-  }, [pins, categoryFilter]);
+
+    let base: Pin[];
+    if (real.length === 0 && !wantSecret) {
+      // Only Top Ten is toggled — rank across every pin.
+      base = pins;
+    } else {
+      const cats = new Set(real);
+      base = pins.filter(
+        (p) =>
+          cats.has(p.category) ||
+          (p.subcategory != null && cats.has(p.subcategory)) ||
+          (wantSecret && p.secret)
+      );
+    }
+
+    if (wantTopTen) {
+      const inView = mapBounds
+        ? base.filter(
+            (p) =>
+              p.lat >= mapBounds.minLat &&
+              p.lat <= mapBounds.maxLat &&
+              p.lng >= mapBounds.minLng &&
+              p.lng <= mapBounds.maxLng
+          )
+        : base;
+      return inView
+        .map((p) => ({ p, r: ratings.get(p.id) }))
+        .filter((x) => !!x.r && x.r.count > 0)
+        .sort(
+          (a, b) =>
+            (b.r as { avg: number; count: number }).avg -
+              (a.r as { avg: number; count: number }).avg ||
+            (b.r as { avg: number; count: number }).count -
+              (a.r as { avg: number; count: number }).count
+        )
+        .slice(0, 10)
+        .map((x) => x.p);
+    }
+
+    return base;
+  }, [pins, categoryFilter, ratings, mapBounds]);
 
   const editFormPosition = useMemo(() => {
     if (!editingPin) return null;
@@ -436,6 +518,8 @@ export default function TravPadHome() {
           focus={mapFocus}
           onFocusConsumed={clearMapFocus}
           onRequestOsmImport={setOsmImportBounds}
+          topTenMode={topTenActive}
+          onBoundsChange={setMapBounds}
         />
 
         <div className="absolute left-4 top-4 z-[500] flex items-center gap-3">
