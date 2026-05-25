@@ -47,6 +47,9 @@ export default function PinImageUpload({
 
       for (const file of files) {
         if (!file.type.startsWith("image/")) continue;
+        console.log(
+          `[PinImageUpload] file: name=${file.name} type=${file.type} size=${(file.size / 1024 / 1024).toFixed(2)}MB`
+        );
 
         if (!announcedThisBatch && onGpsDetected) {
           try {
@@ -60,29 +63,45 @@ export default function PinImageUpload({
               announcedThisBatch = true;
               setGpsAnnounced(true);
             }
-          } catch {
-            // ignore
+          } catch (e) {
+            console.warn("[PinImageUpload] exifr failed:", e);
           }
         }
 
-        const compressed = await imageCompression(file, {
-          maxSizeMB: 1,
-          maxWidthOrHeight: 1920,
-          useWebWorker: true,
-        });
+        // Compression can fail on HEIC, RAW, Samsung Motion Photo, or
+        // very large files. Fall back to the original when possible.
+        let blob: Blob = file;
+        let ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+        let contentType = file.type || "image/jpeg";
+        try {
+          const compressed = await imageCompression(file, {
+            maxSizeMB: 1,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+          });
+          blob = compressed;
+          ext = (compressed.name.split(".").pop() || "jpg").toLowerCase();
+          contentType = compressed.type || "image/jpeg";
+        } catch (e) {
+          console.warn(
+            "[PinImageUpload] compression failed, uploading original:",
+            e
+          );
+          if (file.size > 10 * 1024 * 1024) {
+            throw new Error(
+              `Couldn't compress "${file.name}" and it's too large to upload as-is (>10 MB).`
+            );
+          }
+        }
 
-        const ext = (compressed.name.split(".").pop() || "jpg").toLowerCase();
         const path = `${user.id}/${Date.now()}-${Math.random()
           .toString(36)
           .slice(2, 8)}.${ext}`;
 
         const { error: upErr } = await supabase.storage
           .from("pin-images")
-          .upload(path, compressed, {
-            contentType: compressed.type,
-            upsert: false,
-          });
-        if (upErr) throw new Error(upErr.message);
+          .upload(path, blob, { contentType, upsert: false });
+        if (upErr) throw new Error(`Storage: ${upErr.message}`);
 
         newPaths.push(path);
       }

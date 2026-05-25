@@ -29,50 +29,80 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
   async function handleFile(file: File) {
     setError(null);
     setBusy(true);
+    console.log(
+      `[AddPinFab] file: name=${file.name} type=${file.type} size=${(file.size / 1024 / 1024).toFixed(2)}MB`
+    );
     try {
-      const exifr = (await import("exifr")).default;
-      const gps = await exifr.gps(file);
-      if (
-        !gps ||
-        !Number.isFinite(gps.latitude) ||
-        !Number.isFinite(gps.longitude)
-      ) {
+      // EXIF GPS — wrap in its own try so a parser crash on a quirky
+      // file (Samsung Motion Photo, broken EXIF, etc.) doesn't kill the
+      // whole flow.
+      let gps: { latitude: number; longitude: number } | null = null;
+      try {
+        const exifr = (await import("exifr")).default;
+        const raw = await exifr.gps(file);
+        if (
+          raw &&
+          Number.isFinite(raw.latitude) &&
+          Number.isFinite(raw.longitude)
+        ) {
+          gps = { latitude: raw.latitude, longitude: raw.longitude };
+        }
+      } catch (e) {
+        console.warn("[AddPinFab] exifr failed:", e);
+      }
+      if (!gps) {
         setError("The image has no GPS data.");
         return;
       }
 
-      // Upload the image too, so it's attached to the new pin.
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error("You must be signed in.");
 
-      const imageCompression = (await import("browser-image-compression"))
-        .default;
-      const compressed = await imageCompression(file, {
-        maxSizeMB: 1,
-        maxWidthOrHeight: 1920,
-        useWebWorker: true,
-      });
+      // Compression — many things can break it on mobile (HEIC, RAW, huge
+      // files, Motion Photo bundles). Fall back to uploading the original
+      // file when the limit allows.
+      let blob: Blob = file;
+      let ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      let contentType = file.type || "image/jpeg";
+      try {
+        const imageCompression = (await import("browser-image-compression"))
+          .default;
+        const compressed = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        });
+        blob = compressed;
+        ext = (compressed.name.split(".").pop() || "jpg").toLowerCase();
+        contentType = compressed.type || "image/jpeg";
+      } catch (e) {
+        console.warn("[AddPinFab] compression failed, uploading original:", e);
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error(
+            "Couldn't compress this image and it's too large to upload as-is (>10 MB)."
+          );
+        }
+      }
 
-      const ext = (compressed.name.split(".").pop() || "jpg").toLowerCase();
       const path = `${user.id}/${Date.now()}-${Math.random()
         .toString(36)
         .slice(2, 8)}.${ext}`;
 
       const { error: upErr } = await supabase.storage
         .from("pin-images")
-        .upload(path, compressed, {
-          contentType: compressed.type,
-          upsert: false,
-        });
-      if (upErr) throw new Error(upErr.message);
+        .upload(path, blob, { contentType, upsert: false });
+      if (upErr) throw new Error(`Storage: ${upErr.message}`);
 
       onGpsFromImage(gps.latitude, gps.longitude, path);
       setOpen(false);
     } catch (err) {
+      console.error("[AddPinFab] handleFile failed:", err);
       setError(
-        err instanceof Error ? err.message : "Couldn't add the image."
+        err instanceof Error
+          ? err.message
+          : "Couldn't add the image."
       );
     } finally {
       setBusy(false);
