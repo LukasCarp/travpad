@@ -9,6 +9,18 @@ type Props = {
   onGpsFromImage: (lat: number, lng: number, imagePath: string) => void;
 };
 
+// EXIF GPSLatitude / GPSLongitude come as [degrees, minutes, seconds] arrays
+// plus an N/S/E/W reference. Convert to a signed decimal degree.
+function dmsToDecimal(dms: unknown, ref: unknown): number {
+  if (!Array.isArray(dms) || dms.length < 3) return NaN;
+  const [d, m, s] = dms.map((v) => Number(v));
+  if (!Number.isFinite(d) || !Number.isFinite(m) || !Number.isFinite(s)) {
+    return NaN;
+  }
+  const sign = ref === "S" || ref === "W" ? -1 : 1;
+  return sign * (d + m / 60 + s / 3600);
+}
+
 export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [open, setOpen] = useState(false);
@@ -33,12 +45,15 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
       `[AddPinFab] file: name=${file.name} type=${file.type} size=${(file.size / 1024 / 1024).toFixed(2)}MB`
     );
     try {
-      // EXIF GPS — wrap in its own try so a parser crash on a quirky
-      // file (Samsung Motion Photo, broken EXIF, etc.) doesn't kill the
-      // whole flow.
+      // EXIF GPS — try several extraction strategies before giving up.
+      // exifr.gps() is the convenience method, but it misses some files
+      // where exifr.parse() with the GPS block does find a position.
       let gps: { latitude: number; longitude: number } | null = null;
+      let exifKeys: string[] = [];
       try {
         const exifr = (await import("exifr")).default;
+
+        // Strategy 1: the convenience method.
         const raw = await exifr.gps(file);
         if (
           raw &&
@@ -47,11 +62,53 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
         ) {
           gps = { latitude: raw.latitude, longitude: raw.longitude };
         }
+
+        // Strategy 2: full parse with the GPS block forced on.
+        if (!gps) {
+          const parsed = await exifr.parse(file, { gps: true });
+          if (parsed) {
+            exifKeys = Object.keys(parsed);
+            console.log("[AddPinFab] full EXIF parse:", parsed);
+            if (
+              Number.isFinite(parsed.latitude) &&
+              Number.isFinite(parsed.longitude)
+            ) {
+              gps = {
+                latitude: parsed.latitude,
+                longitude: parsed.longitude,
+              };
+            }
+          }
+        }
+
+        // Strategy 3: manual DMS → decimal from GPSLatitude/Ref tags
+        // (some encoders only write the raw arrays, not the parsed pair).
+        if (!gps) {
+          const parsed = await exifr.parse(file, {
+            pick: [
+              "GPSLatitude",
+              "GPSLatitudeRef",
+              "GPSLongitude",
+              "GPSLongitudeRef",
+            ],
+          });
+          const lat = dmsToDecimal(parsed?.GPSLatitude, parsed?.GPSLatitudeRef);
+          const lng = dmsToDecimal(
+            parsed?.GPSLongitude,
+            parsed?.GPSLongitudeRef
+          );
+          if (Number.isFinite(lat) && Number.isFinite(lng)) {
+            gps = { latitude: lat, longitude: lng };
+          }
+        }
       } catch (e) {
         console.warn("[AddPinFab] exifr failed:", e);
       }
       if (!gps) {
-        setError("The image has no GPS data.");
+        const tail = exifKeys.length
+          ? ` (found ${exifKeys.length} other EXIF fields, no GPS — likely stripped by a sharing app)`
+          : " (no EXIF found at all — likely stripped before upload)";
+        setError("The image has no GPS data." + tail);
         return;
       }
 
