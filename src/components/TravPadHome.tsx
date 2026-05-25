@@ -4,11 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Layers, LogIn, MapPin, Plus } from "lucide-react";
+import { Info, Layers, LogIn, MapPin, Plus } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import type { NewPin, Pin } from "@/lib/supabase";
 import { getOfflinePins } from "@/lib/offline/db";
 import AddPinFab from "./AddPinFab";
+import AboutDrawer from "./AboutDrawer";
 import AddPinForm from "./AddPinForm";
 import CategoryFilter, {
   SECRET_FILTER,
@@ -79,6 +80,7 @@ export default function TravPadHome() {
 
   // Selected base map style.
   const [basemap, setBasemap] = useState<Basemap>("osm");
+  const [aboutOpen, setAboutOpen] = useState(false);
 
   // Imperative map move (used by SearchBox map results).
   const [mapFocus, setMapFocus] = useState<MapFocus>(null);
@@ -172,18 +174,30 @@ export default function TravPadHome() {
               p.lng <= mapBounds.maxLng
           )
         : base;
-      return inView
-        .map((p) => ({ p, r: ratings.get(p.id) }))
-        .filter((x) => !!x.r && x.r.count > 0)
-        .sort(
-          (a, b) =>
+      // Rated pins come first (sorted by average, then count). Unrated pins
+      // keep their original order and fill the remaining slots up to 10 —
+      // this matters most for Secret Spots, which often have no reviews yet
+      // but should still rank when the user wants a "top" list.
+      const decorated = inView.map((p, i) => ({
+        p,
+        r: ratings.get(p.id),
+        i,
+      }));
+      decorated.sort((a, b) => {
+        const aHas = !!(a.r && a.r.count > 0);
+        const bHas = !!(b.r && b.r.count > 0);
+        if (aHas !== bHas) return aHas ? -1 : 1;
+        if (aHas && bHas) {
+          return (
             (b.r as { avg: number; count: number }).avg -
               (a.r as { avg: number; count: number }).avg ||
             (b.r as { avg: number; count: number }).count -
               (a.r as { avg: number; count: number }).count
-        )
-        .slice(0, 10)
-        .map((x) => x.p);
+          );
+        }
+        return a.i - b.i;
+      });
+      return decorated.slice(0, 10).map((x) => x.p);
     }
 
     return base;
@@ -572,6 +586,16 @@ export default function TravPadHome() {
 
         <button
           type="button"
+          onClick={() => setAboutOpen(true)}
+          aria-label="About TravPad"
+          title="About TravPad"
+          className="fixed bottom-32 left-4 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xl ring-1 ring-black/10 transition hover:bg-neutral-50 hover:text-rose-500 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+        >
+          <Info className="h-5 w-5" />
+        </button>
+
+        <button
+          type="button"
           onClick={() =>
             setBasemap((b) =>
               b === "osm" ? "voyager" : b === "voyager" ? "toner" : "osm"
@@ -681,6 +705,8 @@ export default function TravPadHome() {
           onImported={loadPins}
         />
       )}
+
+      <AboutDrawer open={aboutOpen} onClose={() => setAboutOpen(false)} />
 
       {showCreateForm && pending && (
         <AddPinForm

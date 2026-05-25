@@ -4,7 +4,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ImageUp, MapPin, Pencil } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { colorForCategory, labelForService } from "@/lib/pinTaxonomy";
+import {
+  colorForCategory,
+  iconForCategory,
+  iconForSubcategory,
+  labelForService,
+} from "@/lib/pinTaxonomy";
 import { siteUrl } from "@/lib/site";
 import PinContact from "@/components/PinContact";
 import type { Pin } from "@/lib/supabase";
@@ -118,6 +123,13 @@ export default async function PinPage({
   const images = imageUrls(pin.images);
   const description = pin.short_description ?? pin.description ?? "";
 
+  // Same icon logic as the map markers: prefer the subcategory's icon,
+  // fall back to the category's.
+  const CategoryIcon = pin.subcategory
+    ? iconForSubcategory(pin.subcategory)
+    : iconForCategory(pin.category);
+  const categoryColor = colorForCategory(pin.category);
+
   // Structured data — helps Google understand this is a geographic place.
   const jsonLd = {
     "@context": "https://schema.org",
@@ -148,20 +160,42 @@ export default async function PinPage({
       </Link>
 
       {images.length > 0 ? (
-        <div className="mt-4 overflow-hidden rounded-xl bg-neutral-100 dark:bg-neutral-800">
+        <div className="relative mt-4 overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={images[0]}
             alt={pin.title}
             className="aspect-[4/3] w-full object-cover"
           />
+          <div
+            aria-label={pin.subcategory ?? pin.category}
+            className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white shadow-lg"
+            style={{ backgroundColor: categoryColor }}
+          >
+            <CategoryIcon
+              className="h-5 w-5 text-white"
+              strokeWidth={2.5}
+              aria-hidden="true"
+            />
+          </div>
         </div>
       ) : (
-        <div className="mt-4 flex aspect-[4/3] w-full items-center justify-center rounded-xl bg-neutral-100 dark:bg-neutral-800">
+        <div className="relative mt-4 flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-neutral-100 dark:bg-neutral-800">
           <ImageUp
             className="h-24 w-24 text-neutral-400 dark:text-neutral-500"
             aria-hidden="true"
           />
+          <div
+            aria-label={pin.subcategory ?? pin.category}
+            className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white shadow-lg"
+            style={{ backgroundColor: categoryColor }}
+          >
+            <CategoryIcon
+              className="h-5 w-5 text-white"
+              strokeWidth={2.5}
+              aria-hidden="true"
+            />
+          </div>
         </div>
       )}
 

@@ -70,3 +70,10 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Hide Leaflet/OSM attribution while any vaul drawer is open. It sits in
+   the bottom-right corner and competes for attention with the drawer,
+   especially on desktop where the side drawer doesn't fully cover it. */
+body:has([data-vaul-drawer][data-state="open"]) .leaflet-control-attribution {
+  display: none;
+}

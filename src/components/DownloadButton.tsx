@@ -80,16 +80,20 @@ export default function DownloadButton({ tileTemplate }: Props) {
       ? Math.round((progress.done / progress.total) * 100)
       : 0;
 
-  if (!user) return null;
-
   return (
     <>
       <button
         type="button"
         onClick={openDialog}
+        disabled={!user}
         aria-label="Download this area for offline use"
-        title="Download offline"
-        className="fixed bottom-32 left-4 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xl ring-1 ring-black/10 transition hover:bg-neutral-50 hover:text-rose-500 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+        title={user ? "Download offline" : "Sign in to download offline maps"}
+        className={
+          "fixed bottom-44 left-4 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xl ring-1 ring-black/10 transition dark:bg-neutral-900 dark:text-neutral-200 " +
+          (user
+            ? "hover:bg-neutral-50 hover:text-rose-500 dark:hover:bg-neutral-800"
+            : "cursor-not-allowed opacity-50")
+        }
       >
         <Download className="h-5 w-5" />
       </button>

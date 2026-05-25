@@ -16,7 +16,6 @@ export default function OsmImportButton({
 }) {
   const map = useMap();
   const { user } = useAuth();
-  if (!user) return null;
 
   function click() {
     const b = map.getBounds();
@@ -32,9 +31,15 @@ export default function OsmImportButton({
     <button
       type="button"
       onClick={click}
+      disabled={!user}
       aria-label="Import places from OpenStreetMap"
-      title="Import from OSM"
-      className="fixed bottom-44 left-4 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xl ring-1 ring-black/10 transition hover:bg-neutral-50 hover:text-rose-500 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
+      title={user ? "Import from OSM" : "Sign in to import from OSM"}
+      className={
+        "fixed bottom-56 left-4 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xl ring-1 ring-black/10 transition dark:bg-neutral-900 dark:text-neutral-200 " +
+        (user
+          ? "hover:bg-neutral-50 hover:text-rose-500 dark:hover:bg-neutral-800"
+          : "cursor-not-allowed opacity-50")
+      }
     >
       <Sparkles className="h-5 w-5" />
     </button>

@@ -20,7 +20,9 @@ import { createClient } from "@/lib/supabase/client";
 import type { Pin } from "@/lib/supabase";
 import {
   colorForCategory,
+  iconForCategory,
   iconForService,
+  iconForSubcategory,
   labelForService,
 } from "@/lib/pinTaxonomy";
 import { useAuth } from "./AuthProvider";
@@ -204,18 +206,37 @@ export default function PinDrawer({
             <X className="h-4 w-4" />
           </button>
 
-          {pin && (
+          {pin && (() => {
+            const CategoryIcon = pin.subcategory
+              ? iconForSubcategory(pin.subcategory)
+              : iconForCategory(pin.category);
+            const categoryColor = colorForCategory(pin.category);
+            const categoryBadge = (
+              <div
+                aria-label={pin.subcategory ?? pin.category}
+                className="absolute left-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white shadow-lg"
+                style={{ backgroundColor: categoryColor }}
+              >
+                <CategoryIcon
+                  className="h-5 w-5 text-white"
+                  strokeWidth={2.5}
+                  aria-hidden="true"
+                />
+              </div>
+            );
+            return (
             <div className="flex-1 overflow-y-auto">
               {images.length === 0 && (
-                <div className="flex aspect-[4/3] w-full items-center justify-center bg-neutral-100 dark:bg-neutral-800">
+                <div className="relative mx-3 mt-3 flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800">
                   <ImageUp
                     className="h-24 w-24 text-neutral-400 dark:text-neutral-500"
                     aria-hidden="true"
                   />
+                  {categoryBadge}
                 </div>
               )}
               {images.length > 0 && (
-                <div className="relative bg-neutral-100 dark:bg-neutral-800">
+                <div className="relative mx-3 mt-3 overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800">
                   <div className="aspect-[4/3] w-full">
                     <OfflineImage
                       path={images[activeIdx].path}
@@ -223,6 +244,7 @@ export default function PinDrawer({
                       className="h-full w-full object-cover"
                     />
                   </div>
+                  {categoryBadge}
                   {images.length > 1 && (
                     <>
                       <button
@@ -469,7 +491,8 @@ export default function PinDrawer({
                 )}
               </div>
             </div>
-          )}
+            );
+          })()}
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
