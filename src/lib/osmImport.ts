@@ -629,6 +629,97 @@ export async function fetchWikidataPois(
   return out;
 }
 
+// Themed Wikidata query — instance-of OR subclass-of a curated Q-id list
+// (castles, waterfalls, lighthouses, …). Surfaces nature/history POIs the
+// general fetchWikidataPois misses because they have no Wikipedia article.
+//
+// Categories are picked by the matched theme Q-id (returned as `?theme`),
+// which is more reliable than label substring matching.
+const THEMED_Q_TO_CAT: Record<string, CatPair> = {
+  Q23413: { category: "Sights", subcategory: "History & Monuments" }, // castle
+  Q179700: { category: "Sights", subcategory: "History & Monuments" }, // monument
+  Q34038: { category: "Sights", subcategory: "Nature & Viewpoints" }, // waterfall
+  Q46169: { category: "Sights", subcategory: "Nature & Viewpoints" }, // national park
+  Q35509: { category: "Sights", subcategory: "Nature & Viewpoints" }, // cave
+  Q8502: { category: "Sights", subcategory: "Nature & Viewpoints" }, // mountain
+  Q40080: { category: "Sights", subcategory: "Beaches & Coastal" }, // beach
+  Q39715: { category: "Sights", subcategory: "Beaches & Coastal" }, // lighthouse
+  Q177380: { category: "Sights", subcategory: "Beaches & Coastal" }, // hot spring
+};
+
+export async function fetchWikidataThemedPois(
+  bounds: OsmBounds
+): Promise<CandidatePin[]> {
+  const res = await fetch("/api/wikidata-themed", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bbox: bounds }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(
+      `Wikidata themed proxy ${res.status}: ${text || "no body"}`
+    );
+  }
+  const data = (await res.json()) as {
+    results?: { bindings?: WikidataThemedBinding[] };
+  };
+  const bindings = data.results?.bindings ?? [];
+  console.log(
+    `[osmImport] wikidata themed returned ${bindings.length} bindings`
+  );
+
+  // Keep the first matching theme per Q-entity — a single thing can be both
+  // a "castle" and a "fortress", we only need to land it in one category.
+  const byQ = new Map<string, WikidataThemedBinding>();
+  for (const row of bindings) {
+    const qid = qidFromUrl(row.item?.value);
+    if (!qid || byQ.has(qid)) continue;
+    byQ.set(qid, row);
+  }
+
+  const out: CandidatePin[] = [];
+  for (const [qid, row] of byQ) {
+    const title = row.itemLabel?.value;
+    const coord = parseWktPoint(row.coord?.value);
+    if (!title || !coord) continue;
+    const themeQ = qidFromUrl(row.theme?.value);
+    const mapping = themeQ ? THEMED_Q_TO_CAT[themeQ] : null;
+    if (!mapping) continue;
+    const imageFile = row.image?.value;
+    const imageUrl = imageFile
+      ? `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(
+          decodeURIComponent(imageFile.split("/").pop() ?? "")
+        )}?width=640`
+      : undefined;
+    out.push({
+      osmId: `wikidata/${qid}`,
+      wikidataId: qid,
+      source: "wikidata",
+      lat: coord.lat,
+      lng: coord.lng,
+      title,
+      category: mapping.category,
+      subcategory: mapping.subcategory,
+      short_description: null,
+      description: null,
+      services: [],
+      details: {},
+      imageUrl,
+      rawTags: { wikidata: qid },
+    });
+  }
+  return out;
+}
+
+type WikidataThemedBinding = {
+  item?: { value: string };
+  itemLabel?: { value: string };
+  coord?: { value: string };
+  image?: { value: string };
+  theme?: { value: string };
+};
+
 type WikidataBinding = {
   item?: { value: string };
   itemLabel?: { value: string };

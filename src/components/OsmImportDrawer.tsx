@@ -14,6 +14,7 @@ import {
   bboxAreaDeg2,
   fetchOsmPois,
   fetchWikidataPois,
+  fetchWikidataThemedPois,
   fetchWikivoyagePois,
   fetchWikiSummary,
   findUserPinKeys,
@@ -78,21 +79,29 @@ export default function OsmImportDrawer({
         return;
       }
       try {
-        // Query OSM, Wikidata and Wikivoyage in parallel. If any of them
-        // fails the others still drive the list.
-        const [osmRes, wdRes, wvRes] = await Promise.allSettled([
+        // Query OSM, Wikidata (general + themed) and Wikivoyage in parallel.
+        // If any of them fails the others still drive the list.
+        const [osmRes, wdRes, wdtRes, wvRes] = await Promise.allSettled([
           fetchOsmPois(bounds),
           fetchWikidataPois(bounds),
+          fetchWikidataThemedPois(bounds),
           fetchWikivoyagePois(bounds),
         ]);
         const osmPins = osmRes.status === "fulfilled" ? osmRes.value : [];
         const wdPins = wdRes.status === "fulfilled" ? wdRes.value : [];
+        const wdtPins = wdtRes.status === "fulfilled" ? wdtRes.value : [];
         const wvPins = wvRes.status === "fulfilled" ? wvRes.value : [];
         if (osmRes.status === "rejected") {
           console.warn("[osmImport] OSM fetch failed:", osmRes.reason);
         }
         if (wdRes.status === "rejected") {
           console.warn("[osmImport] Wikidata fetch failed:", wdRes.reason);
+        }
+        if (wdtRes.status === "rejected") {
+          console.warn(
+            "[osmImport] Wikidata themed fetch failed:",
+            wdtRes.reason
+          );
         }
         if (wvRes.status === "rejected") {
           console.warn("[osmImport] Wikivoyage fetch failed:", wvRes.reason);
@@ -111,6 +120,10 @@ export default function OsmImportDrawer({
           const key = p.wikidataId ?? p.osmId;
           if (!byKey.has(key)) byKey.set(key, p);
         }
+        for (const p of wdtPins) {
+          const key = p.wikidataId ?? p.osmId;
+          if (!byKey.has(key)) byKey.set(key, p);
+        }
         for (const p of wvPins) {
           byKey.set(p.osmId, p);
         }
@@ -120,7 +133,7 @@ export default function OsmImportDrawer({
         if (!alive) return;
         const unescoFlipped = list.filter((p) => p.source === "unesco").length;
         console.log(
-          `[osmImport] merged: ${osmPins.length} OSM + ${wdPins.length} Wikidata + ${wvPins.length} Wikivoyage = ${byKey.size} unique → ${list.length} after UNESCO overlay (${unescoFlipped} UNESCO-flagged)`
+          `[osmImport] merged: ${osmPins.length} OSM + ${wdPins.length} Wikidata + ${wdtPins.length} themed + ${wvPins.length} Wikivoyage = ${byKey.size} unique → ${list.length} after UNESCO overlay (${unescoFlipped} UNESCO-flagged)`
         );
 
         // Drop anything you've already pinned. Match on `osm_id` (modern
