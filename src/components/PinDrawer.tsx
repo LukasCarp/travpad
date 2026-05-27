@@ -28,6 +28,7 @@ import {
 import { useAuth } from "./AuthProvider";
 import AddToList from "./AddToList";
 import OfflineImage from "./OfflineImage";
+import PinAttribution from "./PinAttribution";
 import PinContact from "./PinContact";
 import PinReviews from "./PinReviews";
 
@@ -429,6 +430,11 @@ export default function PinDrawer({
                 )}
 
                 <PinReviews pinId={pin.id} />
+
+                <PinAttribution
+                  details={pin.details as Parameters<typeof PinAttribution>[0]["details"]}
+                  createdByName={pin.created_by_name}
+                />
 
                 {(canEdit || canDelete) && (
                   <div className="border-t border-neutral-200 pt-4 dark:border-neutral-800">

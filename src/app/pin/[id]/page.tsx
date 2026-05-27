@@ -11,6 +11,7 @@ import {
   labelForService,
 } from "@/lib/pinTaxonomy";
 import { siteUrl } from "@/lib/site";
+import PinAttribution from "@/components/PinAttribution";
 import PinContact from "@/components/PinContact";
 import type { Pin } from "@/lib/supabase";
 
@@ -291,6 +292,12 @@ export default async function PinPage({
           Edit
         </Link>
       </div>
+
+      <PinAttribution
+        details={pin.details as Parameters<typeof PinAttribution>[0]["details"]}
+        createdByName={pin.created_by_name}
+        className="mt-6"
+      />
     </main>
   );
 }

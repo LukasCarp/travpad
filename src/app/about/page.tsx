@@ -66,6 +66,9 @@ export default function AboutPage() {
             <Link href="/privacy" className="hover:text-neutral-900 dark:hover:text-neutral-100">
               Privacy
             </Link>
+            <Link href="/credits" className="hover:text-neutral-900 dark:hover:text-neutral-100">
+              Credits
+            </Link>
             <Link href="/" className="hover:text-neutral-900 dark:hover:text-neutral-100">
               Open the map
             </Link>
