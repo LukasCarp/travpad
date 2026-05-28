@@ -122,7 +122,7 @@ export default function CategoryFilter({ active, onChange }: Props) {
         : `${count} selected`;
 
   return (
-    <div ref={ref} className="absolute left-4 top-20 z-[500]">
+    <div ref={ref} className="absolute left-4 top-20 z-[700]">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}

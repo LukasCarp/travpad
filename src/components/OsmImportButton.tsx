@@ -32,8 +32,8 @@ export default function OsmImportButton({
       type="button"
       onClick={click}
       disabled={!user}
-      aria-label="Import places from OpenStreetMap"
-      title={user ? "Import from OSM" : "Sign in to import from OSM"}
+      aria-label="Discover places in this area"
+      title={user ? "Discover places" : "Sign in to discover places"}
       className={
         "fixed bottom-56 left-4 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xl ring-1 ring-black/10 transition dark:bg-neutral-900 dark:text-neutral-200 " +
         (user

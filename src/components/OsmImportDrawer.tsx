@@ -331,20 +331,23 @@ export default function OsmImportDrawer({
           }
         >
           <Drawer.Title className="sr-only">
-            Import places from OpenStreetMap
+            Discover places in this area
           </Drawer.Title>
           <Drawer.Description className="sr-only">
-            Review places found in the current map area and import the ones you
-            want as TravPad pins.
+            Notable places found in the current map area from open wiki
+            sources — review and import the ones you want as TravPad pins.
           </Drawer.Description>
 
           <div className="flex flex-none items-start justify-between border-b border-neutral-200 p-5 dark:border-neutral-800">
             <div>
-              <h1 className="text-lg font-semibold">Import from OpenStreetMap</h1>
+              <h1 className="text-lg font-semibold">
+                Discover places in this area
+              </h1>
               <p className="mt-1 text-xs text-neutral-500">
-                Places in the visible area with a Wikipedia description.
-                A photo is included when the article has one. Uncheck
-                anything you don&apos;t want, then import.
+                Notable spots pulled from OpenStreetMap, Wikipedia, Wikivoyage
+                and UNESCO. Each comes with a short description and, when
+                available, a photo. Uncheck anything you don&apos;t want, then
+                import.
               </p>
             </div>
             <button
