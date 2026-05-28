@@ -82,10 +82,17 @@ export async function generateMetadata({
   const images = imageUrls(pin.images);
   const url = `${siteUrl()}/pin/${pin.id}`;
 
+  // Thin content — a pin with no description and no image is barely useful
+  // to a human and hurts overall index quality, so tell Google not to index
+  // it. follow stays true so internal links are still crawled.
+  const isThin =
+    !pin.description && !pin.short_description && images.length === 0;
+
   return {
     title: `${pin.title} · TravPad`,
     description,
     alternates: { canonical: url },
+    robots: isThin ? { index: false, follow: true } : undefined,
     openGraph: {
       type: "website",
       siteName: "TravPad",
@@ -123,6 +130,44 @@ export default async function PinPage({
 
   const images = imageUrls(pin.images);
   const description = pin.short_description ?? pin.description ?? "";
+
+  // Related pins — small internal link graph so Googlebot can crawl from
+  // one pin to the next instead of treating every page as an island. We
+  // pull a rough bounding box ~5 km wide and let Postgres do the rest.
+  const DEG_PER_KM = 1 / 111;
+  const NEARBY_RADIUS_KM = 5;
+  const dy = NEARBY_RADIUS_KM * DEG_PER_KM;
+  const dx = dy / Math.max(Math.cos((pin.lat * Math.PI) / 180), 0.1);
+
+  const [nearbyResp, categoryResp] = await Promise.all([
+    supabase
+      .from("pins_view")
+      .select("id, title, category, subcategory, lat, lng, images")
+      .neq("id", pin.id)
+      .gte("lat", pin.lat - dy)
+      .lte("lat", pin.lat + dy)
+      .gte("lng", pin.lng - dx)
+      .lte("lng", pin.lng + dx)
+      .limit(20),
+    supabase
+      .from("pins_view")
+      .select("id, title, category, subcategory, lat, lng, images")
+      .eq("category", pin.category)
+      .neq("id", pin.id)
+      .order("created_at", { ascending: false })
+      .limit(6),
+  ]);
+
+  const nearby = ((nearbyResp.data ?? []) as RelatedPin[])
+    .map((p) => ({
+      ...p,
+      // Quick squared-distance — good enough for sorting at this scale,
+      // no need for great-circle math.
+      d2: (p.lat - pin.lat) ** 2 + (p.lng - pin.lng) ** 2,
+    }))
+    .sort((a, b) => a.d2 - b.d2)
+    .slice(0, 5);
+  const categoryPins = ((categoryResp.data ?? []) as RelatedPin[]).slice(0, 5);
 
   // Same icon logic as the map markers: prefer the subcategory's icon,
   // fall back to the category's.
@@ -293,11 +338,86 @@ export default async function PinPage({
         </Link>
       </div>
 
+      {nearby.length > 0 && (
+        <RelatedPinList heading="Nearby" pins={nearby} />
+      )}
+      {categoryPins.length > 0 && (
+        <RelatedPinList
+          heading={`More in ${pin.category}`}
+          pins={categoryPins}
+        />
+      )}
+
       <PinAttribution
         details={pin.details as Parameters<typeof PinAttribution>[0]["details"]}
         createdByName={pin.created_by_name}
         className="mt-6"
       />
     </main>
+  );
+}
+
+type RelatedPin = Pick<
+  Pin,
+  "id" | "title" | "category" | "subcategory" | "lat" | "lng" | "images"
+>;
+
+function relatedThumbUrl(images: RelatedPin["images"]): string | null {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const first = images?.[0]?.storage_path;
+  if (!base || !first) return null;
+  return `${base}/storage/v1/object/public/pin-images/${first}`;
+}
+
+function RelatedPinList({
+  heading,
+  pins,
+}: {
+  heading: string;
+  pins: RelatedPin[];
+}) {
+  return (
+    <section className="mt-8 border-t border-neutral-200 pt-6 dark:border-neutral-800">
+      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-neutral-500">
+        {heading}
+      </h2>
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {pins.map((p) => {
+          const thumb = relatedThumbUrl(p.images);
+          return (
+            <li key={p.id}>
+              <Link
+                href={`/pin/${p.id}`}
+                className="group block overflow-hidden rounded-xl bg-neutral-100 ring-1 ring-black/5 transition hover:ring-rose-300 dark:bg-neutral-800 dark:ring-white/10"
+              >
+                {thumb ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={thumb}
+                    alt={p.title}
+                    className="aspect-[4/3] w-full object-cover transition group-hover:scale-[1.02]"
+                  />
+                ) : (
+                  <div
+                    className="flex aspect-[4/3] w-full items-center justify-center text-white"
+                    style={{ backgroundColor: colorForCategory(p.category) }}
+                  >
+                    <MapPin className="h-6 w-6 opacity-80" />
+                  </div>
+                )}
+                <div className="p-2.5">
+                  <p className="line-clamp-2 text-xs font-medium text-neutral-800 dark:text-neutral-100">
+                    {p.title}
+                  </p>
+                  <p className="mt-0.5 text-[10px] text-neutral-500">
+                    {p.subcategory ?? p.category}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
