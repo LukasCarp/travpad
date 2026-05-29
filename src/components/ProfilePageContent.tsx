@@ -23,6 +23,7 @@ import MessagesInbox from "./MessagesInbox";
 import Notifications from "./Notifications";
 import OfflinePacks from "./OfflinePacks";
 import ProfileEditModal from "./ProfileEditModal";
+import UserBadges from "./UserBadges";
 
 type Tab = "offline" | "messages" | "pins" | "reviews" | "follows" | "lists";
 
@@ -420,6 +421,7 @@ export default function ProfilePageContent({
                         following
                       </span>
                     </div>
+                    <UserBadges userId={profileId} className="pt-2" />
                   </div>
                   {!isOwn && user && (
                     <div className="flex flex-none flex-col items-end gap-2">
