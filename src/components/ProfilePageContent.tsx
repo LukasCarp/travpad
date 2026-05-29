@@ -460,6 +460,18 @@ export default function ProfilePageContent({
                   )}
                 </section>
 
+                {isOwn && /^Traveler-[a-f0-9]{4}$/.test(profile.display_name ?? "") && (
+                  <button
+                    type="button"
+                    onClick={() => setEditOpen(true)}
+                    className="w-full rounded-lg bg-amber-50 px-3 py-2 text-left text-sm text-amber-800 ring-1 ring-amber-200 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-200 dark:ring-amber-900 dark:hover:bg-amber-950/60"
+                  >
+                    You&apos;re shown as{" "}
+                    <span className="font-semibold">{profile.display_name}</span>
+                    . Pick a real name so others can recognise you →
+                  </button>
+                )}
+
                 {isOwn && (
                   <div className="flex flex-wrap items-center gap-2">
                     <button
@@ -478,11 +490,6 @@ export default function ProfilePageContent({
                       <LogOut className="h-4 w-4" />
                       Sign out
                     </button>
-                    {user?.email && (
-                      <span className="ml-auto max-w-[12rem] truncate text-xs text-neutral-500">
-                        {user.email}
-                      </span>
-                    )}
                   </div>
                 )}
 
