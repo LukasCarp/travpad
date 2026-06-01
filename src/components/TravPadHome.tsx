@@ -567,7 +567,9 @@ export default function TravPadHome() {
             className="flex flex-none items-center gap-2 rounded-full bg-white/95 px-3 py-2 text-sm shadow-lg ring-1 ring-black/10 hover:bg-white dark:bg-neutral-900/95 dark:ring-white/10"
           >
             <MapPin className="h-5 w-5 text-rose-500" />
-            <span className="font-semibold tracking-tight">TravPad</span>
+            <span className="hidden font-semibold tracking-tight sm:inline">
+              TravPad
+            </span>
           </Link>
           <SearchBox
             onMapPick={handleMapPick}

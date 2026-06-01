@@ -211,7 +211,7 @@ export default function SearchBox({
           }}
           onFocus={() => setOpen(true)}
           placeholder="Search places, pins or people…"
-          className="flex-1 bg-transparent outline-none"
+          className="w-0 flex-1 bg-transparent outline-none"
         />
         {query.length > 0 && (
           <button
