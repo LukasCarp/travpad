@@ -199,7 +199,7 @@ export default function SearchBox({
     userHits.length === 0;
 
   return (
-    <div className="relative w-full max-w-md" ref={containerRef}>
+    <div className="relative w-full min-w-0 max-w-md flex-1" ref={containerRef}>
       <div className="flex items-center gap-2 rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-sm shadow-sm focus-within:border-rose-400 dark:border-neutral-700 dark:bg-neutral-900">
         <Search className="h-4 w-4 flex-none text-neutral-400" />
         <input

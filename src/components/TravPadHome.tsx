@@ -561,7 +561,7 @@ export default function TravPadHome() {
           onBoundsChange={setMapBounds}
         />
 
-        <div className="absolute left-4 top-4 z-[500] flex items-center gap-3">
+        <div className="absolute left-4 right-20 top-4 z-[500] flex items-center gap-3">
           <Link
             href="/"
             className="flex flex-none items-center gap-2 rounded-full bg-white/95 px-3 py-2 text-sm shadow-lg ring-1 ring-black/10 hover:bg-white dark:bg-neutral-900/95 dark:ring-white/10"
