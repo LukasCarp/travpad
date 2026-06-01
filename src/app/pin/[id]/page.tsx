@@ -11,6 +11,7 @@ import {
   labelForService,
 } from "@/lib/pinTaxonomy";
 import { siteUrl } from "@/lib/site";
+import PhotoCredit from "@/components/PhotoCredit";
 import PinAttribution from "@/components/PinAttribution";
 import PinContact from "@/components/PinContact";
 import type { Pin } from "@/lib/supabase";
@@ -206,25 +207,28 @@ export default async function PinPage({
       </Link>
 
       {images.length > 0 ? (
-        <div className="relative mt-4 overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={images[0]}
-            alt={pin.title}
-            className="aspect-[4/3] w-full object-cover"
-          />
-          <div
-            aria-label={pin.subcategory ?? pin.category}
-            className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white shadow-lg"
-            style={{ backgroundColor: categoryColor }}
-          >
-            <CategoryIcon
-              className="h-5 w-5 text-white"
-              strokeWidth={2.5}
-              aria-hidden="true"
+        <>
+          <div className="relative mt-4 overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={images[0]}
+              alt={pin.title}
+              className="aspect-[4/3] w-full object-cover"
             />
+            <div
+              aria-label={pin.subcategory ?? pin.category}
+              className="absolute left-5 top-5 flex h-10 w-10 items-center justify-center rounded-full border-2 border-white shadow-lg"
+              style={{ backgroundColor: categoryColor }}
+            >
+              <CategoryIcon
+                className="h-5 w-5 text-white"
+                strokeWidth={2.5}
+                aria-hidden="true"
+              />
+            </div>
           </div>
-        </div>
+          <PhotoCredit credit={pin.images?.[0]?.credit_json} className="mt-1" />
+        </>
       ) : (
         <div className="relative mt-4 flex aspect-[4/3] w-full items-center justify-center rounded-2xl bg-neutral-100 dark:bg-neutral-800">
           <ImageUp
@@ -296,9 +300,24 @@ export default async function PinPage({
       )}
 
       {pin.description && (
-        <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
-          {pin.description}
-        </p>
+        <div className="mt-4">
+          {(() => {
+            const det = (pin.details ?? {}) as {
+              wikipedia_lang?: string;
+              wikipedia_title?: string;
+            };
+            const lang = det.wikipedia_lang;
+            if (!lang || lang === "en" || !det.wikipedia_title) return null;
+            return (
+              <p className="mb-2 inline-block rounded-md bg-neutral-100 px-2 py-1 text-[10px] uppercase tracking-wide text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                Auto-translated from {lang} Wikipedia
+              </p>
+            );
+          })()}
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+            {pin.description}
+          </p>
+        </div>
       )}
 
       <PinContact details={pin.details} className="mt-4" />

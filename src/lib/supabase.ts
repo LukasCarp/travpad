@@ -1,6 +1,12 @@
 export type PinImage = {
   id: string;
   storage_path: string;
+  credit_json?: {
+    artist?: string | null;
+    license_short?: string | null;
+    license_url?: string | null;
+    file_page?: string | null;
+  } | null;
 };
 
 export type Review = {

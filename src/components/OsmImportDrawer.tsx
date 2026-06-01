@@ -20,6 +20,7 @@ import {
   findUserPinKeys,
   mergeUnesco,
   translateToEnglish,
+  fetchCommonsCredit,
   uploadImageFromUrl,
   type CandidatePin,
   type OsmBounds,
@@ -249,11 +250,17 @@ export default function OsmImportDrawer({
       try {
         // If the pin has a Wikipedia thumbnail, copy it into Storage so it
         // shows up as a normal pin image. Failures are non-fatal — the pin
-        // is still created without an image.
+        // is still created without an image. Also fetch photographer +
+        // license from Commons so we can credit the photo inline.
         const imagePaths: string[] = [];
+        let imageCredit: Awaited<ReturnType<typeof fetchCommonsCredit>> = null;
         if (p.imageUrl && user) {
-          const path = await uploadImageFromUrl(supabase, user.id, p.imageUrl);
+          const [path, credit] = await Promise.all([
+            uploadImageFromUrl(supabase, user.id, p.imageUrl),
+            fetchCommonsCredit(p.imageUrl),
+          ]);
           if (path) imagePaths.push(path);
+          imageCredit = credit;
         }
 
         // Capture where each piece of info came from so the future
@@ -292,6 +299,14 @@ export default function OsmImportDrawer({
           p_image_paths: imagePaths,
           p_secret: false,
         });
+        if (!rpcError && imageCredit && imagePaths.length > 0) {
+          // Stamp the photo credit on the pin_images row we just inserted.
+          // Identified by storage_path which is unique-per-upload.
+          await supabase
+            .from("pin_images")
+            .update({ credit_json: imageCredit })
+            .in("storage_path", imagePaths);
+        }
         if (rpcError) {
           failed++;
           console.warn("OSM import failed for", p.title, rpcError.message);

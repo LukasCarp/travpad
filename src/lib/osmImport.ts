@@ -482,8 +482,89 @@ export async function findUserPinKeys(
 //
 // NOTE (test feature): this stores images without attribution. The
 // Wikipedia images are usually CC-BY-SA which legally requires displaying
-// the author and license — fine for local testing, but production use
-// would need an attribution UI and DB column for credit/license per image.
+// Per-image attribution fetched from Commons. CC BY / CC BY-SA require
+// the photographer + license to be visible at the work itself.
+export type CommonsCredit = {
+  artist: string | null;          // photographer or uploader, HTML-stripped
+  license_short: string | null;   // e.g. "CC BY-SA 4.0"
+  license_url: string | null;
+  file_page: string | null;       // Commons file description page
+};
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// Pull photographer + license from a Commons Special:FilePath URL.
+// Returns null on any failure — credit is nice-to-have, not blocking.
+export async function fetchCommonsCredit(
+  imageUrl: string
+): Promise<CommonsCredit | null> {
+  try {
+    const u = new URL(imageUrl);
+    // FilePath URLs look like https://commons.wikimedia.org/wiki/Special:FilePath/<filename>?...
+    if (!u.hostname.endsWith("wikimedia.org")) return null;
+    const segments = u.pathname.split("/");
+    const filename = decodeURIComponent(segments[segments.length - 1] ?? "");
+    if (!filename) return null;
+
+    const apiUrl =
+      "https://commons.wikimedia.org/w/api.php?" +
+      new URLSearchParams({
+        action: "query",
+        prop: "imageinfo",
+        iiprop: "user|extmetadata|url",
+        titles: `File:${filename}`,
+        format: "json",
+        origin: "*",
+      }).toString();
+
+    const res = await fetch(apiUrl);
+    if (!res.ok) return null;
+    const data = (await res.json()) as {
+      query?: {
+        pages?: Record<
+          string,
+          {
+            title?: string;
+            imageinfo?: Array<{
+              user?: string;
+              descriptionurl?: string;
+              extmetadata?: Record<string, { value?: string }>;
+            }>;
+          }
+        >;
+      };
+    };
+    const pages = data.query?.pages ?? {};
+    const first = Object.values(pages)[0];
+    const info = first?.imageinfo?.[0];
+    if (!info) return null;
+
+    const meta = info.extmetadata ?? {};
+    const artistRaw =
+      meta.Artist?.value ?? meta.Credit?.value ?? info.user ?? null;
+    return {
+      artist: artistRaw ? stripHtml(artistRaw).slice(0, 200) : null,
+      license_short: meta.LicenseShortName?.value
+        ? stripHtml(meta.LicenseShortName.value)
+        : null,
+      license_url: meta.LicenseUrl?.value ?? null,
+      file_page: info.descriptionurl ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function uploadImageFromUrl(
   supabase: ReturnType<typeof createClient>,
   userId: string,

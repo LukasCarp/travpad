@@ -28,6 +28,7 @@ import {
 import { useAuth } from "./AuthProvider";
 import AddToList from "./AddToList";
 import OfflineImage from "./OfflineImage";
+import PhotoCredit from "./PhotoCredit";
 import PinAttribution from "./PinAttribution";
 import PinContact from "./PinContact";
 import PinReviews from "./PinReviews";
@@ -82,6 +83,7 @@ export default function PinDrawer({
       url: supabase.storage
         .from("pin-images")
         .getPublicUrl(img.storage_path).data.publicUrl,
+      credit: img.credit_json ?? null,
     }));
   }, [pin, supabase]);
 
@@ -278,6 +280,13 @@ export default function PinDrawer({
                 </div>
               )}
 
+              {images[activeIdx]?.credit && (
+                <PhotoCredit
+                  credit={images[activeIdx].credit}
+                  className="px-5 pt-1"
+                />
+              )}
+
               {images.length > 1 && (
                 <div className="flex gap-1 overflow-x-auto px-3 py-2">
                   {images.map((img, i) => (
@@ -399,11 +408,26 @@ export default function PinDrawer({
                   </p>
                 )}
 
-                {pin.description && (
-                  <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
-                    {pin.description}
-                  </p>
-                )}
+                {pin.description && (() => {
+                  const det = (pin.details ?? {}) as {
+                    wikipedia_lang?: string;
+                    wikipedia_title?: string;
+                  };
+                  const lang = det.wikipedia_lang;
+                  const translated = !!lang && lang !== "en" && !!det.wikipedia_title;
+                  return (
+                    <div>
+                      {translated && (
+                        <p className="mb-2 inline-block rounded-md bg-neutral-100 px-2 py-1 text-[10px] uppercase tracking-wide text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400">
+                          Auto-translated from {lang} Wikipedia
+                        </p>
+                      )}
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
+                        {pin.description}
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 <PinContact details={pin.details} />
 

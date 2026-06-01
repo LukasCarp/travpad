@@ -86,6 +86,7 @@ export default function PinAttribution({
   // User-created pins (no imports) get a CC BY-SA 4.0 line crediting the
   // contributor — same license TravPad applies to all user content.
   const userCreated = items.length === 0;
+  const osmEditHref = osmHref(d.osm_id);
 
   return (
     <section
@@ -127,6 +128,19 @@ export default function PinAttribution({
             </li>
           ))}
         </ul>
+      )}
+      {osmEditHref && (
+        <p className="mt-2">
+          See something wrong?{" "}
+          <a
+            href={osmEditHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-rose-600 underline-offset-2 hover:underline dark:text-rose-300"
+          >
+            Edit on OpenStreetMap →
+          </a>
+        </p>
       )}
       <p className="mt-2">
         <Link
