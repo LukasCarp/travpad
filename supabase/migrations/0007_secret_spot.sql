@@ -1,4 +1,4 @@
--- TravPad migration: "Secret Spot" flag on pins.
+-- OpenPin migration: "Secret Spot" flag on pins.
 -- A pin can be marked as a secret spot regardless of its category. Secret pins
 -- get a distinct marker on the map and can be filtered to on their own.
 -- Idempotent: safe to re-run in the Supabase SQL editor.

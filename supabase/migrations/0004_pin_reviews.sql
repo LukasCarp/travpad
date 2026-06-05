@@ -1,4 +1,4 @@
--- TravPad migration: review + rating system for pins.
+-- OpenPin migration: review + rating system for pins.
 -- Idempotent: safe to re-run.
 
 create table if not exists public.pin_reviews (

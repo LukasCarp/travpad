@@ -9,7 +9,7 @@
 
 import type { Pin } from "@/lib/supabase";
 
-const DB_NAME = "travpad-offline";
+const DB_NAME = "openpin-offline";
 const DB_VERSION = 2;
 
 export type OfflinePack = {

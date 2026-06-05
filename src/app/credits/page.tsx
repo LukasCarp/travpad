@@ -3,9 +3,9 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Data sources & credits · TravPad",
+  title: "Data sources & credits · OpenPin",
   description:
-    "Where TravPad's pin data comes from, the open licenses it is shared under, and how to report or correct an entry.",
+    "Where OpenPin's pin data comes from, the open licenses it is shared under, and how to report or correct an entry.",
 };
 
 function Section({
@@ -33,14 +33,14 @@ export default function CreditsPage() {
       <main className="mx-auto max-w-2xl">
         <Link href="/" className="inline-flex items-center gap-2">
           <MapPin className="h-5 w-5 text-rose-500" />
-          <span className="text-lg font-semibold tracking-tight">TravPad</span>
+          <span className="text-lg font-semibold tracking-tight">OpenPin</span>
         </Link>
 
         <h1 className="mt-8 text-3xl font-semibold tracking-tight">
           Data sources &amp; credits
         </h1>
         <p className="mt-2 text-sm text-neutral-500">
-          TravPad would not exist without the open-data communities below.
+          OpenPin would not exist without the open-data communities below.
           Every imported pin keeps a link back to its source.
         </p>
 
@@ -170,14 +170,14 @@ export default function CreditsPage() {
             find the photographer and exact terms.
           </p>
           <p>
-            Photos uploaded by TravPad users are licensed CC BY-SA 4.0 unless
+            Photos uploaded by OpenPin users are licensed CC BY-SA 4.0 unless
             stated otherwise — see the next section.
           </p>
         </Section>
 
         <Section title="User contributions">
           <p>
-            All text, photos and lists submitted by TravPad users are
+            All text, photos and lists submitted by OpenPin users are
             licensed under{" "}
             <a
               href="https://creativecommons.org/licenses/by-sa/4.0/"
@@ -187,7 +187,7 @@ export default function CreditsPage() {
             >
               Creative Commons BY-SA 4.0
             </a>
-            . That means anyone (including TravPad and other projects) may
+            . That means anyone (including OpenPin and other projects) may
             reuse the content as long as the contributor is credited and
             derivative works carry the same license.
           </p>
@@ -221,10 +221,10 @@ export default function CreditsPage() {
             Found a wrong entry, a missing attribution, or a copyright
             concern? Email{" "}
             <a
-              href="mailto:hello@travpad.app"
+              href="mailto:hello@openpin.app"
               className="text-rose-600 hover:underline"
             >
-              hello@travpad.app
+              hello@openpin.app
             </a>{" "}
             with the pin&apos;s URL and we&apos;ll act within a week.
           </p>

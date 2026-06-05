@@ -37,7 +37,7 @@ create policy "user_badges_read" on public.user_badges for select using (true);
 
 -- Seed the Phase 1 catalogue. Re-runnable thanks to ON CONFLICT.
 insert into public.badges (slug, name, description, icon, sort_order) values
-  ('first_pin',     'First Pin',     'Added your first pin to TravPad.',                                   'Sparkles',   10),
+  ('first_pin',     'First Pin',     'Added your first pin to OpenPin.',                                   'Sparkles',   10),
   ('explorer',      'Explorer',      'Added 10 pins to the map.',                                          'Compass',    20),
   ('wanderer',      'Wanderer',      'Pinned places in 5 different areas around the world.',              'Globe',      30),
   ('sharp_eye',     'Sharp Eye',     'At least 70% of your pins have a photo and a thoughtful write-up.',  'BadgeCheck', 40),

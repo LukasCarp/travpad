@@ -4,7 +4,7 @@
 //
 // Loads POIs from OpenStreetMap for the captured bounding box, enriches a
 // handful with a Wikipedia summary, and lets the user pick which to import
-// as TravPad pins.
+// as OpenPin pins.
 
 import { useEffect, useMemo, useState } from "react";
 import { Loader, X } from "lucide-react";
@@ -350,7 +350,7 @@ export default function OsmImportDrawer({
           </Drawer.Title>
           <Drawer.Description className="sr-only">
             Notable places found in the current map area from open wiki
-            sources — review and import the ones you want as TravPad pins.
+            sources — review and import the ones you want as OpenPin pins.
           </Drawer.Description>
 
           <div className="flex flex-none items-start justify-between border-b border-neutral-200 p-5 dark:border-neutral-800">

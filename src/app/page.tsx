@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import TravPadHome from "@/components/TravPadHome";
+import OpenPinHome from "@/components/OpenPinHome";
 import { createClient } from "@/lib/supabase/server";
 
 // Per-pin Open Graph tags so a shared `/?pin=<id>` link gets a proper
@@ -26,7 +26,7 @@ export async function generateMetadata({
   const description =
     (data.short_description as string | null) ??
     (data.description as string | null) ??
-    "A place pinned on TravPad";
+    "A place pinned on OpenPin";
 
   const images = (data.images ?? []) as { storage_path: string }[];
   const firstImage = images[0];
@@ -36,7 +36,7 @@ export async function generateMetadata({
     : undefined;
 
   return {
-    title: `${title} · TravPad`,
+    title: `${title} · OpenPin`,
     description,
     openGraph: {
       title,
@@ -55,7 +55,7 @@ export async function generateMetadata({
 export default function Page() {
   return (
     <Suspense fallback={null}>
-      <TravPadHome />
+      <OpenPinHome />
     </Suspense>
   );
 }

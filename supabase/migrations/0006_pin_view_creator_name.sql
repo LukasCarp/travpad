@@ -1,4 +1,4 @@
--- TravPad: expose pin creator's display_name on pins_view so the client can
+-- OpenPin: expose pin creator's display_name on pins_view so the client can
 -- render "Skapad av X" without an extra query per pin.
 -- Idempotent: safe to re-run.
 

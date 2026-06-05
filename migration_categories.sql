@@ -1,4 +1,4 @@
--- TravPad: migrate existing pins from the old Swedish taxonomy to the new
+-- OpenPin: migrate existing pins from the old Swedish taxonomy to the new
 -- English taxonomy. Run once in the Supabase SQL editor.
 --
 -- The new taxonomy has no clean 1:1 mapping (no Transport/Other category), so

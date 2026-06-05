@@ -73,13 +73,13 @@ export async function generateMetadata({
   const pin = await getPin(id);
 
   if (!pin) {
-    return { title: "Pin not found · TravPad" };
+    return { title: "Pin not found · OpenPin" };
   }
 
   const description =
     pin.short_description ??
     pin.description ??
-    "A place pinned on TravPad.";
+    "A place pinned on OpenPin.";
   const images = imageUrls(pin.images);
   const url = `${siteUrl()}/pin/${pin.id}`;
 
@@ -90,13 +90,13 @@ export async function generateMetadata({
     !pin.description && !pin.short_description && images.length === 0;
 
   return {
-    title: `${pin.title} · TravPad`,
+    title: `${pin.title} · OpenPin`,
     description,
     alternates: { canonical: url },
     robots: isThin ? { index: false, follow: true } : undefined,
     openGraph: {
       type: "website",
-      siteName: "TravPad",
+      siteName: "OpenPin",
       url,
       title: pin.title,
       description,
@@ -203,7 +203,7 @@ export default async function PinPage({
         href="/"
         className="text-sm font-medium text-rose-600 hover:underline"
       >
-        ← TravPad
+        ← OpenPin
       </Link>
 
       {images.length > 0 ? (

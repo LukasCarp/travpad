@@ -69,7 +69,7 @@ export default function AboutContent() {
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-6 pb-16 pt-16 sm:pt-24">
         <h1 className="text-5xl font-semibold leading-tight tracking-tight sm:text-6xl md:text-7xl">
-          TravPad
+          OpenPin
         </h1>
         <p className="mt-4 max-w-3xl text-2xl font-medium text-neutral-700 dark:text-neutral-200 sm:text-3xl">
           A wiki map for travelers and locals.
@@ -95,8 +95,8 @@ export default function AboutContent() {
 
         <div className="mt-12">
           <VideoSlot
-            src="/travpad-promo.mp4"
-            label="TravPad in action"
+            src="/openpin-promo.mp4"
+            label="OpenPin in action"
             aspect="aspect-[9/16]"
             className="mx-auto max-w-sm"
             loop={false}
@@ -104,15 +104,15 @@ export default function AboutContent() {
         </div>
       </section>
 
-      {/* What is TravPad */}
+      {/* What is OpenPin */}
       <section className="border-y border-neutral-200/60 bg-white py-20 dark:border-neutral-800/60 dark:bg-neutral-950">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-semibold sm:text-4xl">
-            What is TravPad
+            What is OpenPin
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-neutral-700 dark:text-neutral-300">
             The world&apos;s weirdest, best, most underrated places — pinned
-            by people who&apos;ve been there. TravPad is a living map built
+            by people who&apos;ve been there. OpenPin is a living map built
             by locals and travelers, in the spirit of Wikipedia and
             OpenStreetMap. Free, open, and made better by everyone who adds
             to it.
@@ -189,7 +189,7 @@ export default function AboutContent() {
             </h2>
             <div className="mt-6 space-y-4 text-lg leading-relaxed text-neutral-200">
               <p>
-                TravPad is more than pins on a map.
+                OpenPin is more than pins on a map.
                 <span className="ml-1 inline-flex items-center gap-1 font-medium text-rose-300">
                   <Bookmark className="h-4 w-4" /> Follow
                 </span>{" "}
@@ -223,7 +223,7 @@ export default function AboutContent() {
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2 className="text-3xl font-semibold sm:text-4xl">Community</h2>
           <p className="mt-6 text-lg leading-relaxed text-neutral-700 dark:text-neutral-300">
-            TravPad belongs to everyone who uses it. No ads, no algorithms
+            OpenPin belongs to everyone who uses it. No ads, no algorithms
             pushing you toward sponsored spots — just real places shared by
             real people.
           </p>

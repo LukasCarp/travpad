@@ -13,7 +13,7 @@ type PinRow = {
 function buildPrompt(pins: PinRow[]): string {
   if (pins.length === 0) {
     return [
-      "A user on TravPad hasn't pinned any places yet.",
+      "A user on OpenPin hasn't pinned any places yet.",
       "Write a short, charming comment (max 2 sentences, in English) encouraging them to start exploring.",
     ].join("\n");
   }
@@ -28,7 +28,7 @@ function buildPrompt(pins: PinRow[]): string {
   });
 
   return [
-    "Here are places a user has pinned on TravPad:",
+    "Here are places a user has pinned on OpenPin:",
     "",
     lines.join("\n"),
     "",

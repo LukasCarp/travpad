@@ -3,8 +3,8 @@ import Link from "next/link";
 import { MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy · TravPad",
-  description: "How TravPad collects, uses and protects your information.",
+  title: "Privacy Policy · OpenPin",
+  description: "How OpenPin collects, uses and protects your information.",
 };
 
 function Section({
@@ -30,7 +30,7 @@ export default function PrivacyPage() {
       <main className="mx-auto max-w-2xl">
         <Link href="/" className="inline-flex items-center gap-2">
           <MapPin className="h-5 w-5 text-rose-500" />
-          <span className="text-lg font-semibold tracking-tight">TravPad</span>
+          <span className="text-lg font-semibold tracking-tight">OpenPin</span>
         </Link>
 
         <h1 className="mt-8 text-3xl font-semibold tracking-tight">
@@ -41,8 +41,8 @@ export default function PrivacyPage() {
         </p>
 
         <p className="mt-6 text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
-          TravPad is a wiki-style travel map where people pin and share places.
-          This policy explains what information TravPad collects, how it is
+          OpenPin is a wiki-style travel map where people pin and share places.
+          This policy explains what information OpenPin collects, how it is
           used, and the choices you have.
         </p>
 
@@ -72,7 +72,7 @@ export default function PrivacyPage() {
 
         <Section title="How we use your information">
           <p>
-            We use it to operate TravPad — to show pins on the map, display your
+            We use it to operate OpenPin — to show pins on the map, display your
             profile, let you follow places and people, notify you about edits to
             pins you follow, and keep the service secure.
           </p>
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
 
         <Section title="Public content">
           <p>
-            TravPad is a public, collaborative map. Pins, profiles, reviews and
+            OpenPin is a public, collaborative map. Pins, profiles, reviews and
             lists you create are visible to other users and to anyone with a
             link to them. Please do not pin private locations or post anything
             you do not want to be public.
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section title="Third-party services">
-          <p>TravPad relies on these services to function:</p>
+          <p>OpenPin relies on these services to function:</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
               <strong>Supabase</strong> — stores your account, content and
@@ -99,7 +99,7 @@ export default function PrivacyPage() {
               in with them; they handle that authentication.
             </li>
             <li>
-              <strong>Anthropic</strong> — the optional &ldquo;TravPad
+              <strong>Anthropic</strong> — the optional &ldquo;OpenPin
               Compass&rdquo; feature sends the titles and categories of your
               pins to Anthropic&apos;s API to generate a short summary of your
               travel style.
@@ -116,7 +116,7 @@ export default function PrivacyPage() {
 
         <Section title="Photo location data">
           <p>
-            When you add a photo, TravPad may read GPS coordinates embedded in
+            When you add a photo, OpenPin may read GPS coordinates embedded in
             the photo&apos;s metadata to place the pin. This is done in your
             browser; only the resulting pin location is saved.
           </p>
@@ -132,7 +132,7 @@ export default function PrivacyPage() {
 
         <Section title="Children">
           <p>
-            TravPad is not directed at children under 13, and we do not
+            OpenPin is not directed at children under 13, and we do not
             knowingly collect their information.
           </p>
         </Section>
@@ -153,7 +153,7 @@ export default function PrivacyPage() {
 
         <p className="mt-10 text-sm">
           <Link href="/" className="text-rose-600 hover:underline">
-            ← Back to TravPad
+            ← Back to OpenPin
           </Link>
         </p>
       </main>

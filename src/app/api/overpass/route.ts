@@ -3,7 +3,7 @@
 // Mobile Safari sometimes refuses to fetch directly from overpass-api.de
 // and the alternate mirrors ("Failed to fetch", CORS preflight failures,
 // TLS quirks). Going through our own origin sidesteps all of that — the
-// browser only talks to travpad.vercel.app, which then fans out to the
+// browser only talks to our own origin, which then fans out to the
 // Overpass mirrors server-side.
 //
 // Part of the OSM import test feature; remove together with src/lib/osmImport.ts.

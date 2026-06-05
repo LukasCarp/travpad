@@ -1,7 +1,7 @@
 // Server-side proxy for the Wikidata Query Service.
 //
 // Mirrors /api/overpass: we fan out SPARQL queries from our own origin so
-// the browser only ever talks to travpad.vercel.app, and we can set a
+// the browser only ever talks to our own origin, and we can set a
 // proper User-Agent (Wikidata asks for one on Query Service requests).
 //
 // Part of the OSM/Wikidata import test feature; remove together with
@@ -73,7 +73,7 @@ LIMIT 200`;
     const r = await fetch(url, {
       headers: {
         Accept: "application/sparql-results+json",
-        "User-Agent": "TravPad/0.1 (https://travpad.vercel.app)",
+        "User-Agent": "OpenPin/0.1 (https://openpin.app)",
       },
     });
     if (!r.ok) {

@@ -125,7 +125,7 @@ export default function LoginForm({ onClose }: { onClose?: () => void }) {
 
       <Link href="/" className="mb-6 flex items-center justify-center gap-2">
         <MapPin className="h-6 w-6 text-rose-500" />
-        <span className="text-xl font-semibold tracking-tight">TravPad</span>
+        <span className="text-xl font-semibold tracking-tight">OpenPin</span>
       </Link>
 
       <h1 className="mb-1 text-center text-2xl font-semibold">

@@ -1,4 +1,4 @@
--- TravPad — helper view + RPC for working with PostGIS pins from the JS client.
+-- OpenPin — helper view + RPC for working with PostGIS pins from the JS client.
 -- Run this in the Supabase SQL editor once. Adjust column names if your `pins`
 -- table uses different ones than the assumptions below.
 --

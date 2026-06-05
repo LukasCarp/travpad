@@ -1,4 +1,4 @@
--- TravPad migration: profiles + follows + avatars storage.
+-- OpenPin migration: profiles + follows + avatars storage.
 -- Idempotent: safe to re-run.
 
 -- ---------------------------------------------------------------------------

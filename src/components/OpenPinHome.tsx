@@ -37,7 +37,7 @@ const MapCanvas = dynamic(() => import("./MapCanvas"), {
   ),
 });
 
-export default function TravPadHome() {
+export default function OpenPinHome() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -274,7 +274,10 @@ export default function TravPadHome() {
   // — not the initial state — so it can't cause an SSR hydration mismatch).
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("travpad:categoryFilter");
+      // Fall back to the old key once so existing visitors don't lose state.
+      const raw =
+        localStorage.getItem("openpin:categoryFilter") ??
+        localStorage.getItem("travpad:categoryFilter");
       const parsed = raw ? JSON.parse(raw) : null;
       if (Array.isArray(parsed)) {
         setCategoryFilter(parsed.filter((v) => typeof v === "string"));
@@ -293,7 +296,7 @@ export default function TravPadHome() {
     }
     try {
       localStorage.setItem(
-        "travpad:categoryFilter",
+        "openpin:categoryFilter",
         JSON.stringify(categoryFilter)
       );
     } catch {
@@ -568,7 +571,7 @@ export default function TravPadHome() {
           >
             <MapPin className="h-5 w-5 text-rose-500" />
             <span className="hidden font-semibold tracking-tight sm:inline">
-              TravPad
+              OpenPin
             </span>
           </Link>
           <SearchBox
@@ -614,8 +617,8 @@ export default function TravPadHome() {
         <button
           type="button"
           onClick={() => setAboutOpen(true)}
-          aria-label="About TravPad"
-          title="About TravPad"
+          aria-label="About OpenPin"
+          title="About OpenPin"
           className="fixed bottom-32 left-4 z-[500] flex h-11 w-11 items-center justify-center rounded-full bg-white text-neutral-700 shadow-2xl ring-1 ring-black/10 transition hover:bg-neutral-50 hover:text-rose-500 dark:bg-neutral-900 dark:text-neutral-200 dark:hover:bg-neutral-800"
         >
           <Info className="h-5 w-5" />

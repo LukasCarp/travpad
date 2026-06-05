@@ -70,7 +70,7 @@ function FocusController({
   return null;
 }
 
-const VIEW_KEY = "travpad:mapView";
+const VIEW_KEY = "openpin:mapView";
 
 type SavedView = { lat: number; lng: number; zoom: number };
 

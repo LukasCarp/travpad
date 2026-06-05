@@ -34,7 +34,7 @@ type Listing = {
   article: string;
 };
 
-const USER_AGENT = "TravPad/0.1 (https://travpad.vercel.app)";
+const USER_AGENT = "OpenPin/0.1 (https://openpin.app)";
 const MAX_ARTICLES = 8;
 const MAX_LISTINGS_PER_CALL = 200;
 
@@ -283,7 +283,7 @@ function parseParams(body: string): Record<string, string> {
 }
 
 // Quick-and-dirty wikitext → plain text. Strips links, refs, comments and
-// bold/italic markers; good enough for descriptions shown in TravPad.
+// bold/italic markers; good enough for descriptions shown in OpenPin.
 function stripMarkup(s: string): string {
   return s
     .replace(/<!--[\s\S]*?-->/g, "")

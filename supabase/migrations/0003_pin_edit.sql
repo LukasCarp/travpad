@@ -1,4 +1,4 @@
--- TravPad migration: RPCs for editing and deleting pins.
+-- OpenPin migration: RPCs for editing and deleting pins.
 -- Idempotent: safe to re-run.
 
 -- ---------------------------------------------------------------------------

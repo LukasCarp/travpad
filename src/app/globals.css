@@ -12,7 +12,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* TravPad palette — sand / charcoal surfaces, terracotta + sage accents.
+/* OpenPin palette — sand / charcoal surfaces, terracotta + sage accents.
    Overrides Tailwind's neutral / rose / violet scales so existing utility
    classes pick up the new colors without per-component changes. */
 @theme {

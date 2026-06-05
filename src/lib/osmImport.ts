@@ -2,10 +2,10 @@
 //
 // To delete: remove this file, src/components/OsmImportButton.tsx and
 // src/components/OsmImportDrawer.tsx, and revert the small additions in
-// src/components/MapCanvas.tsx and src/components/TravPadHome.tsx.
+// src/components/MapCanvas.tsx and src/components/OpenPinHome.tsx.
 //
 // Queries the OpenStreetMap Overpass API for POIs in a bounding box and
-// maps OSM tags to TravPad categories, subcategories, chips and contact
+// maps OSM tags to OpenPin categories, subcategories, chips and contact
 // info. Optionally enriches entries that link to Wikipedia/Wikidata with a
 // short summary as the description.
 
@@ -73,7 +73,7 @@ export type CandidatePin = {
 // preflight or TLS quirks); going through our own origin sidesteps that.
 const OVERPASS_PROXY = "/api/overpass";
 
-// Tag filters chosen so the result maps cleanly to TravPad's taxonomy.
+// Tag filters chosen so the result maps cleanly to OpenPin's taxonomy.
 const NODE_FILTERS = [
   '"amenity"~"^(cafe|restaurant|bar|pub|fast_food|food_court|nightclub|atm|bureau_de_change|coworking_space|library|place_of_worship|cinema|theatre|arts_centre|marketplace)$"',
   '"tourism"~"^(hotel|hostel|apartment|chalet|camp_site|alpine_hut|wilderness_hut|museum|gallery|attraction|viewpoint|artwork)$"',
@@ -828,7 +828,7 @@ function parseWktPoint(
   return { lat, lng };
 }
 
-// Wikidata "instance of" label → TravPad category. The label comes back in
+// Wikidata "instance of" label → OpenPin category. The label comes back in
 // English thanks to the SPARQL service's `bd:serviceParam wikibase:language
 // "en"`. Substring match keeps the table compact and forgiving.
 function mapWikidataInstance(label: string): CatPair | null {
@@ -1083,7 +1083,7 @@ function buildUnescoImageUrl(raw: string | undefined): string | undefined {
 
 // Wikivoyage listings come pre-typed (see/do/eat/drink/sleep/buy). They
 // don't subdivide further inside the template, so map to the broadest
-// matching TravPad subcategory; the user can refine on edit.
+// matching OpenPin subcategory; the user can refine on edit.
 function mapWikivoyageType(type: string): CatPair | null {
   switch (type) {
     case "see":

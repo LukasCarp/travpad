@@ -8,14 +8,14 @@ import AboutContent from "@/components/AboutContent";
 // can be opened as an in-app drawer.
 
 export const metadata: Metadata = {
-  title: "TravPad — A wiki map for travelers and locals",
+  title: "OpenPin — A wiki map for travelers and locals",
   description:
-    "Drop a pin. Share what you know. Find what others found. TravPad is a community-built travel map — free, open and made better by everyone who adds to it.",
+    "Drop a pin. Share what you know. Find what others found. OpenPin is a community-built travel map — free, open and made better by everyone who adds to it.",
   openGraph: {
     type: "website",
-    title: "TravPad — A wiki map for travelers and locals",
+    title: "OpenPin — A wiki map for travelers and locals",
     description:
-      "Drop a pin. Share what you know. Find what others found. TravPad is a community-built travel map.",
+      "Drop a pin. Share what you know. Find what others found. OpenPin is a community-built travel map.",
   },
 };
 
@@ -28,7 +28,7 @@ export default function AboutPage() {
           <Link href="/about" className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-rose-500" />
             <span className="text-lg font-semibold tracking-tight">
-              TravPad
+              OpenPin
             </span>
           </Link>
           <nav className="flex items-center gap-2 sm:gap-4">
@@ -55,7 +55,7 @@ export default function AboutPage() {
           <div className="flex items-center gap-2">
             <MapPin className="h-4 w-4 text-rose-500" />
             <span className="font-medium text-neutral-700 dark:text-neutral-200">
-              TravPad
+              OpenPin
             </span>
             <span>© 2026</span>
           </div>

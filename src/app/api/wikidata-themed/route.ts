@@ -12,7 +12,7 @@ export const runtime = "edge";
 
 // Q-ids to query for and the category/subcategory the matched entity should
 // land in. Mapping mirrors osmImport's `mapWikidataInstance` so the same
-// types land in the same TravPad subcategory regardless of which query
+// types land in the same OpenPin subcategory regardless of which query
 // surfaced them.
 const THEMES: Record<string, { category: string; subcategory: string }> = {
   Q23413: { category: "Sights", subcategory: "History & Monuments" }, // castle
@@ -92,7 +92,7 @@ LIMIT 300`;
     const r = await fetch(url, {
       headers: {
         Accept: "application/sparql-results+json",
-        "User-Agent": "TravPad/0.1 (https://travpad.vercel.app)",
+        "User-Agent": "OpenPin/0.1 (https://openpin.app)",
       },
     });
     if (!r.ok) {

@@ -1,4 +1,4 @@
--- TravPad migration: pin content fields + image relation + storage bucket.
+-- OpenPin migration: pin content fields + image relation + storage bucket.
 -- Idempotent: safe to re-run in the Supabase SQL editor.
 
 -- ---------------------------------------------------------------------------

@@ -84,7 +84,7 @@ export default function PinAttribution({
   }
 
   // User-created pins (no imports) get a CC BY-SA 4.0 line crediting the
-  // contributor — same license TravPad applies to all user content.
+  // contributor — same license OpenPin applies to all user content.
   const userCreated = items.length === 0;
   const osmEditHref = osmHref(d.osm_id);
 
@@ -103,7 +103,7 @@ export default function PinAttribution({
         <p>
           Contributed by{" "}
           <span className="font-medium text-neutral-700 dark:text-neutral-300">
-            {createdByName ?? "a TravPad user"}
+            {createdByName ?? "a OpenPin user"}
           </span>
           . Licensed CC BY-SA 4.0.
         </p>

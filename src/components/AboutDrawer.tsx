@@ -46,7 +46,7 @@ export default function AboutDrawer({ open, onClose }: Props) {
               : "inset-y-0 right-0 w-full max-w-2xl")
           }
         >
-          <Drawer.Title className="sr-only">About TravPad</Drawer.Title>
+          <Drawer.Title className="sr-only">About OpenPin</Drawer.Title>
 
           {isMobile && (
             <div

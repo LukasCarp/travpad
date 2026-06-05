@@ -18,11 +18,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   // Base for resolving relative Open Graph / canonical URLs into absolute ones.
   metadataBase: new URL(siteUrl()),
-  title: "TravPad",
+  title: "OpenPin",
   description: "Wiki map for travelers",
   appleWebApp: {
     capable: true,
-    title: "TravPad",
+    title: "OpenPin",
     statusBarStyle: "default",
   },
 };

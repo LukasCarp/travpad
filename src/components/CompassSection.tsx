@@ -45,7 +45,7 @@ export default function CompassSection({
       setError(
         err instanceof Error
           ? err.message
-          : "Couldn't update TravPad Compass"
+          : "Couldn't update OpenPin Compass"
       );
     } finally {
       setBusy(false);
@@ -58,7 +58,7 @@ export default function CompassSection({
         <div className="flex items-center gap-2">
           <Compass className="h-4 w-4 text-rose-500" />
           <h2 className="text-sm font-semibold tracking-tight">
-            TravPad Compass
+            OpenPin Compass
           </h2>
         </div>
         {canRefresh && (
@@ -93,7 +93,7 @@ export default function CompassSection({
         <p className="text-sm text-neutral-500">
           {canRefresh
             ? "Click Generate and the AI will build a summary of your travel character based on your pins."
-            : "This user hasn't generated their TravPad Compass yet."}
+            : "This user hasn't generated their OpenPin Compass yet."}
         </p>
       )}
 

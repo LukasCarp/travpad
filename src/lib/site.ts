@@ -3,7 +3,7 @@
 // Priority:
 //   1. NEXT_PUBLIC_SITE_URL  — explicit override (set this for a custom domain)
 //   2. VERCEL_PROJECT_PRODUCTION_URL — stable production domain on Vercel
-//      (e.g. "travpad.vercel.app"), set automatically by Vercel
+//      (e.g. the project's *.vercel.app domain), set automatically by Vercel
 //   3. http://localhost:3000 — local development fallback
 //
 // Used for metadataBase, Open Graph URLs, canonical links and the sitemap so

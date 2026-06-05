@@ -1,11 +1,11 @@
 import type { MetadataRoute } from "next";
 
-// Web app manifest — lets TravPad be installed / added to the home screen
+// Web app manifest — lets OpenPin be installed / added to the home screen
 // and launched standalone (useful for offline use).
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "TravPad",
-    short_name: "TravPad",
+    name: "OpenPin",
+    short_name: "OpenPin",
     description: "A wiki-style travel map — pin and share places.",
     start_url: "/",
     display: "standalone",

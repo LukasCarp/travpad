@@ -1,6 +1,6 @@
 # Launch checklist
 
-Concrete steps to take TravPad from `*.vercel.app` preview to a real product.
+Concrete steps to take OpenPin from `*.vercel.app` preview to a real product.
 Beta a punkt i taget — ordningen är ungefär den jag skulle ta dem i.
 
 ## 1. Domän + hosting
