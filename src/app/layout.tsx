@@ -25,6 +25,9 @@ export const metadata: Metadata = {
     title: "OpenPin",
     statusBarStyle: "default",
   },
+  verification: {
+    google: "tmoiKa18gvkpXGIvXx9N3neAzqG9_wypPaUkwUpZjPk",
+  },
 };
 
 export default function RootLayout({
