@@ -1,12 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Send, Share2, Trash2, X } from "lucide-react";
+import { Send, Trash2, X } from "lucide-react";
 import { Drawer } from "vaul";
 import { createClient } from "@/lib/supabase/client";
 import type { Pin } from "@/lib/supabase";
 import { colorForCategory } from "@/lib/pinTaxonomy";
 import { useAuth } from "./AuthProvider";
+import ShareMenu from "./ShareMenu";
 
 function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false);
@@ -40,7 +41,6 @@ export default function ListDrawer({ listId, onClose, onOpenPin }: Props) {
   const [pins, setPins] = useState<Pin[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   // "Send to friend" — copy this list into a followed user's account.
@@ -110,25 +110,6 @@ export default function ListDrawer({ listId, onClose, onOpenPin }: Props) {
   useEffect(() => {
     load();
   }, [load]);
-
-  async function handleShare() {
-    const url = `${window.location.origin}/?list=${listId}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: name, url });
-      } catch {
-        // dismissed
-      }
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard unavailable
-    }
-  }
 
   async function toggleSend() {
     const next = !sendOpen;
@@ -251,14 +232,10 @@ export default function ListDrawer({ listId, onClose, onOpenPin }: Props) {
               </p>
 
               <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={handleShare}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-200 dark:hover:bg-neutral-700"
-                >
-                  <Share2 className="h-4 w-4" />
-                  {copied ? "Copied!" : "Share"}
-                </button>
+                <ShareMenu
+                  title={name}
+                  url={`${typeof window !== "undefined" ? window.location.origin : ""}/?list=${listId}`}
+                />
                 {user && (
                   <button
                     type="button"
