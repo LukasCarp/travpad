@@ -1,12 +1,16 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { ImagePlus, MapPin, Plus, X } from "lucide-react";
+import { Camera, ImagePlus, MapPin, Plus, X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 type Props = {
   onPickFromMap: () => void;
+  // GPS came back from EXIF — drop a pin directly with the image attached.
   onGpsFromImage: (lat: number, lng: number, imagePath: string) => void;
+  // EXIF was missing (e.g. Android 13+ Photo Picker stripped it). Upload
+  // the image anyway and let the user tap on the map to set the position.
+  onUploadAndPickOnMap: (imagePath: string) => void;
 };
 
 // EXIF GPSLatitude / GPSLongitude come as [degrees, minutes, seconds] arrays
@@ -21,96 +25,85 @@ function dmsToDecimal(dms: unknown, ref: unknown): number {
   return sign * (d + m / 60 + s / 3600);
 }
 
-export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
+export default function AddPinFab({
+  onPickFromMap,
+  onGpsFromImage,
+  onUploadAndPickOnMap,
+}: Props) {
   const supabase = useMemo(() => createClient(), []);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
 
   function handlePickMap() {
     setOpen(false);
     onPickFromMap();
   }
 
-  function triggerImageUpload() {
-    setError(null);
-    fileInputRef.current?.click();
+  async function readExifGps(
+    file: File
+  ): Promise<{ latitude: number; longitude: number } | null> {
+    try {
+      const exifr = (await import("exifr")).default;
+
+      // Strategy 1: the convenience method.
+      const raw = await exifr.gps(file);
+      if (
+        raw &&
+        Number.isFinite(raw.latitude) &&
+        Number.isFinite(raw.longitude)
+      ) {
+        return { latitude: raw.latitude, longitude: raw.longitude };
+      }
+
+      // Strategy 2: full parse with the GPS block forced on.
+      const parsed = await exifr.parse(file, { gps: true });
+      if (
+        parsed &&
+        Number.isFinite(parsed.latitude) &&
+        Number.isFinite(parsed.longitude)
+      ) {
+        return { latitude: parsed.latitude, longitude: parsed.longitude };
+      }
+
+      // Strategy 3: manual DMS → decimal from GPSLatitude/Ref tags
+      // (some encoders only write the raw arrays, not the parsed pair).
+      const raw3 = await exifr.parse(file, {
+        pick: [
+          "GPSLatitude",
+          "GPSLatitudeRef",
+          "GPSLongitude",
+          "GPSLongitudeRef",
+        ],
+      });
+      const lat = dmsToDecimal(raw3?.GPSLatitude, raw3?.GPSLatitudeRef);
+      const lng = dmsToDecimal(raw3?.GPSLongitude, raw3?.GPSLongitudeRef);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        return { latitude: lat, longitude: lng };
+      }
+    } catch (e) {
+      console.warn("[AddPinFab] exifr failed:", e);
+    }
+    return null;
   }
 
   async function handleFile(file: File) {
     setError(null);
     setBusy(true);
     console.log(
-      `[AddPinFab] file: name=${file.name} type=${file.type} size=${(file.size / 1024 / 1024).toFixed(2)}MB`
+      `[AddPinFab] file: name=${file.name} type=${file.type} size=${(
+        file.size /
+        1024 /
+        1024
+      ).toFixed(2)}MB`
     );
     try {
-      // EXIF GPS — try several extraction strategies before giving up.
-      // exifr.gps() is the convenience method, but it misses some files
-      // where exifr.parse() with the GPS block does find a position.
-      let gps: { latitude: number; longitude: number } | null = null;
-      let exifKeys: string[] = [];
-      try {
-        const exifr = (await import("exifr")).default;
-
-        // Strategy 1: the convenience method.
-        const raw = await exifr.gps(file);
-        if (
-          raw &&
-          Number.isFinite(raw.latitude) &&
-          Number.isFinite(raw.longitude)
-        ) {
-          gps = { latitude: raw.latitude, longitude: raw.longitude };
-        }
-
-        // Strategy 2: full parse with the GPS block forced on.
-        if (!gps) {
-          const parsed = await exifr.parse(file, { gps: true });
-          if (parsed) {
-            exifKeys = Object.keys(parsed);
-            console.log("[AddPinFab] full EXIF parse:", parsed);
-            if (
-              Number.isFinite(parsed.latitude) &&
-              Number.isFinite(parsed.longitude)
-            ) {
-              gps = {
-                latitude: parsed.latitude,
-                longitude: parsed.longitude,
-              };
-            }
-          }
-        }
-
-        // Strategy 3: manual DMS → decimal from GPSLatitude/Ref tags
-        // (some encoders only write the raw arrays, not the parsed pair).
-        if (!gps) {
-          const parsed = await exifr.parse(file, {
-            pick: [
-              "GPSLatitude",
-              "GPSLatitudeRef",
-              "GPSLongitude",
-              "GPSLongitudeRef",
-            ],
-          });
-          const lat = dmsToDecimal(parsed?.GPSLatitude, parsed?.GPSLatitudeRef);
-          const lng = dmsToDecimal(
-            parsed?.GPSLongitude,
-            parsed?.GPSLongitudeRef
-          );
-          if (Number.isFinite(lat) && Number.isFinite(lng)) {
-            gps = { latitude: lat, longitude: lng };
-          }
-        }
-      } catch (e) {
-        console.warn("[AddPinFab] exifr failed:", e);
-      }
-      if (!gps) {
-        const tail = exifKeys.length
-          ? ` (found ${exifKeys.length} other EXIF fields, no GPS — likely stripped by a sharing app)`
-          : " (no EXIF found at all — likely stripped before upload)";
-        setError("The image has no GPS data." + tail);
-        return;
-      }
+      // Try to read GPS first — if it's there, we can drop the pin at the
+      // exact spot. If not (Android 13+ Photo Picker strips it on share),
+      // we still upload the image and ask the user to tap on the map.
+      const gps = await readExifGps(file);
 
       const {
         data: { user },
@@ -152,14 +145,16 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
         .upload(path, blob, { contentType, upsert: false });
       if (upErr) throw new Error(`Storage: ${upErr.message}`);
 
-      onGpsFromImage(gps.latitude, gps.longitude, path);
+      if (gps) {
+        onGpsFromImage(gps.latitude, gps.longitude, path);
+      } else {
+        onUploadAndPickOnMap(path);
+      }
       setOpen(false);
     } catch (err) {
       console.error("[AddPinFab] handleFile failed:", err);
       setError(
-        err instanceof Error
-          ? err.message
-          : "Couldn't add the image."
+        err instanceof Error ? err.message : "Couldn't add the image."
       );
     } finally {
       setBusy(false);
@@ -194,17 +189,40 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
 
           <button
             type="button"
-            onClick={triggerImageUpload}
+            onClick={() => {
+              setError(null);
+              cameraInputRef.current?.click();
+            }}
+            disabled={busy}
+            className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm hover:bg-neutral-100 disabled:opacity-50 dark:hover:bg-neutral-800"
+          >
+            <Camera className="h-4 w-4 flex-none text-rose-500" />
+            <div>
+              <div className="font-medium">
+                {busy ? "Reading image…" : "Take a photo"}
+              </div>
+              <div className="text-xs text-neutral-500">
+                Captures GPS straight from the camera
+              </div>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              galleryInputRef.current?.click();
+            }}
             disabled={busy}
             className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm hover:bg-neutral-100 disabled:opacity-50 dark:hover:bg-neutral-800"
           >
             <ImagePlus className="h-4 w-4 flex-none text-rose-500" />
             <div>
               <div className="font-medium">
-                {busy ? "Reading image…" : "Upload image with GPS"}
+                {busy ? "Reading image…" : "Upload from gallery"}
               </div>
               <div className="text-xs text-neutral-500">
-                Position is read from EXIF data
+                Uses EXIF GPS if present, otherwise pick on the map
               </div>
             </div>
           </button>
@@ -230,9 +248,21 @@ export default function AddPinFab({ onPickFromMap, onGpsFromImage }: Props) {
       </button>
 
       <input
-        ref={fileInputRef}
+        ref={galleryInputRef}
         type="file"
         accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          e.target.value = "";
+          if (file) void handleFile(file);
+        }}
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
         className="hidden"
         onChange={(e) => {
           const file = e.target.files?.[0];

@@ -70,6 +70,12 @@ export default function OpenPinHome() {
 
   // FAB: "Pick on the map" mode — next map click sets the new pin's position.
   const [pickingFromMap, setPickingFromMap] = useState(false);
+  // When EXIF GPS is missing on an uploaded image we stash the image
+  // path here, flip pickingFromMap on, and attach the path to the next
+  // map tap so the resulting pin gets both location and image.
+  const [pickingImagePath, setPickingImagePath] = useState<string | null>(
+    null
+  );
 
   // Map filter: selected category names and/or SECRET_FILTER. Empty = show all.
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
@@ -312,12 +318,17 @@ export default function OpenPinHome() {
         return;
       }
       if (pickingFromMap && user) {
-        setPending({ lat, lng });
+        setPending({
+          lat,
+          lng,
+          imagePath: pickingImagePath ?? undefined,
+        });
         setPickingFromMap(false);
+        setPickingImagePath(null);
         return;
       }
     },
-    [editingId, relocating, pickingFromMap, user]
+    [editingId, relocating, pickingFromMap, pickingImagePath, user]
   );
 
   const handleCreate = useCallback(
@@ -643,10 +654,17 @@ export default function OpenPinHome() {
             {pickingFromMap ? (
               <>
                 <Plus className="h-4 w-4 text-rose-500" />
-                <span>Click where the pin should go</span>
+                <span>
+                  {pickingImagePath
+                    ? "No GPS in image — tap where it was taken"
+                    : "Click where the pin should go"}
+                </span>
                 <button
                   type="button"
-                  onClick={() => setPickingFromMap(false)}
+                  onClick={() => {
+                    setPickingFromMap(false);
+                    setPickingImagePath(null);
+                  }}
                   className="ml-2 rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700"
                 >
                   Cancel
@@ -674,6 +692,10 @@ export default function OpenPinHome() {
           onGpsFromImage={(lat, lng, imagePath) =>
             setPending({ lat, lng, imagePath })
           }
+          onUploadAndPickOnMap={(imagePath) => {
+            setPickingImagePath(imagePath);
+            setPickingFromMap(true);
+          }}
         />
       )}
 
