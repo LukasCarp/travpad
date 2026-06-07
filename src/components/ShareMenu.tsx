@@ -125,7 +125,7 @@ export default function ShareMenu({ title, url, className = "" }: Props) {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-[1000] mt-1 w-48 overflow-hidden rounded-xl bg-white py-1 shadow-xl ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/10">
+        <div className="absolute bottom-full left-0 z-[1000] mb-1 w-44 overflow-hidden rounded-xl bg-white py-1 shadow-xl ring-1 ring-black/10 dark:bg-neutral-900 dark:ring-white/10">
           <button
             type="button"
             onClick={copyLink}
