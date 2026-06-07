@@ -222,7 +222,7 @@ export default function AddPinFab({
                 {busy ? "Reading image…" : "Upload from gallery"}
               </div>
               <div className="text-xs text-neutral-500">
-                Uses EXIF GPS if present, otherwise pick on the map
+                Best on desktop — mobile galleries often strip GPS
               </div>
             </div>
           </button>
