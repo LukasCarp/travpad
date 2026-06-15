@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import OpenPinHome from "@/components/OpenPinHome";
 import { createClient } from "@/lib/supabase/server";
+import { siteUrl } from "@/lib/site";
 
 // Per-pin Open Graph tags so a shared `/?pin=<id>` link gets a proper
 // preview card on Facebook and other social networks.
@@ -35,12 +36,19 @@ export async function generateMetadata({
         .data.publicUrl
     : undefined;
 
+  // Canonicalise to /pin/<id>. Without this Google flags /?pin=<id> as
+  // "Duplicate without user-selected canonical" because the same pin
+  // content is also reachable at /pin/<id> with its own canonical tag.
+  const canonical = `${siteUrl()}/pin/${pin}`;
+
   return {
     title: `${title} · OpenPin`,
     description,
+    alternates: { canonical },
     openGraph: {
       title,
       description,
+      url: canonical,
       images: imageUrl ? [imageUrl] : undefined,
     },
     twitter: {
